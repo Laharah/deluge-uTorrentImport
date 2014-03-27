@@ -12,7 +12,7 @@ a version of Deluge for windows that matches a python version you have installed
 Twisted installed for python
 
 Directions:
-Download the script here: [url]URL[/url]
+Download the script here:
 
 Place the script in the deluge-1.3.6.egg folder in your deluge install path. (usually C:\Program Files (x86)\Deluge\deluge-1.3.6-py2.6.egg)
 **YOU MUST DO THIS FOR THE SCRIPT TO RUN UNLESS YOU HAVE INSTALLED DELUGE AS A PYTHON PATH**

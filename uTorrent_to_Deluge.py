@@ -46,7 +46,7 @@ class UtorrentToDeluge():
         except:
             print 'could not open log file'
         for line in errors:
-            f.write(line + '\n')
+            f.write(unicode(line, 'UTF-8') + '\n')
         f.close()
 
     def begin_export(self, result):
