@@ -1,21 +1,17 @@
+#!/usr/bin/env python2
 __author__ = 'Laharah'
 
 import os
-
+import os.path
 import sys
-
+from getpass import getuser
 from base64 import b64encode
-
 from deluge.bencode import bdecode
-
 from deluge.ui.client import client
-
 from twisted.internet import reactor
-
 from deluge.log import setupLogger
 
 setupLogger()
-
 
 class UtorrentToDeluge():
     def __init__(self, pathToResumeDat):
@@ -27,7 +23,7 @@ class UtorrentToDeluge():
         self.logFile = 'uTorrent_import_errors.txt'
 
     def setLogPath(self, path):
-        self.logFile = path + '\\uTorrent_import_errors.txt'
+        self.logFile = os.path.join(path, 'uTorrent_import_errors.txt')
 
     def read_resume_dat(self, filename):
         try:
@@ -50,8 +46,8 @@ class UtorrentToDeluge():
         f.close()
 
     def begin_export(self, result):
-        print "Connection was succesful!"
-        print "result:", result
+        print "Connection was successful! (Result: {})".format(result)
+
         client.register_event_handler("TorrentFolderRenamedEvent", self.torrent_folder_renamed)
         print "folder_renamed registered"
         client.register_event_handler("TorrentFileRenamedEvent", self.torrent_file_renamed)
@@ -61,6 +57,9 @@ class UtorrentToDeluge():
         superErrors = {}
 
         for torrent in data.keys():
+            if torrent == '.fileguard':
+                continue
+
             try:
                 fullSavePath = unicode(data[torrent]['path'], 'utf-8')
             except:
@@ -68,7 +67,7 @@ class UtorrentToDeluge():
                 superErrors[fullSavePath] = 1
             if fullSavePath != None:
                 topLevelTitle = fullSavePath.split('\\')[-1]
-                delugeSavePath = '\\'.join(fullSavePath.split('\\')[:-1])
+                delugeSavePath = os.sep.join(fullSavePath.split('\\')[:-1])
             try:
                 fileDump = b64encode(open(unicode(torrent, 'utf-8'), 'rb').read())
             except:
@@ -134,7 +133,7 @@ class UtorrentToDeluge():
             self.torrent_accounting(fullSavePath, False)
             return
         for id in info:
-            delugeTorrentPath = info[id]['save_path'] + '\\' + info[id]['name']
+            delugeTorrentPath = os.path.join(info[id]['save_path'], info[id]['name'])
             if delugeTorrentPath == fullSavePath:
                 self.torrent_accounting(fullSavePath, True)
                 return
@@ -170,22 +169,31 @@ class UtorrentToDeluge():
         self.log_error([error])
         self.disconnect()
 
+def defaultResumePath():
+    appData = os.path.expanduser('~')
+    if os.getenv('APPDATA'):
+        appData = os.getenv('APPDATA')
+    elif os.path.isdir(os.path.join(appData, '.wine')):
+        appData = os.path.join(appData, '.wine/drive_c/users', getuser(), 'Application Data')
+    return os.path.join(appData, 'uTorrent', 'resume.dat')
 
 def main():
+    import argparse
+    parser = argparse.ArgumentParser(
+        description = 'Import torrents from uTorrent into Deluge.',
+        formatter_class = argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument(
+        'resumePath',
+        nargs = '?',
+        default = defaultResumePath(),
+        help = 'Full path of the uTorrent resume.dat file.')
 
+    args = parser.parse_args()
     log_location = os.getcwd()
 
-    args = sys.argv[1:]
-
-    if not args:
-        APPDATA = os.environ['USERPROFILE'] + '\\Appdata\\Roaming\\uTorrent'
-        os.chdir(APPDATA)
-        pathToResumeDat = 'resume.dat'
-
-    else:
-        os.chdir('\\'.join(args[0].split('\\')[:-1]))
-        pathToResumeDat = args[0]
-
+    resumePathParts = args.resumePath.split(os.path.sep)
+    os.chdir(os.path.sep.join(resumePathParts[:-1]))
+    pathToResumeDat = args.resumePath
 
     Exporter = UtorrentToDeluge(pathToResumeDat)
     Exporter.setLogPath(log_location)
