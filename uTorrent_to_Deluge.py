@@ -4,7 +4,7 @@ __author__ = 'Laharah'
 import os
 import os.path
 import sys
-from getpass import getuser
+from getpass import getuser, getpass
 from base64 import b64encode
 from deluge.bencode import bdecode
 from deluge.ui.client import client
@@ -182,14 +182,18 @@ def main():
     parser = argparse.ArgumentParser(
         description = 'Import torrents from uTorrent into Deluge.',
         formatter_class = argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument(
-        'resumePath',
-        nargs = '?',
-        default = defaultResumePath(),
-        help = 'Full path of the uTorrent resume.dat file.')
+
+    parser.add_argument('resumePath', nargs='?', default=defaultResumePath(), help="path of uTorrent resume.dat file")
+    parser.add_argument('--host', default='127.0.0.1', help="deluge daemon host")
+    parser.add_argument('--port', '-p', type=int, default=58846, help="deluge daemon port")
+    parser.add_argument('--user', '-u', help="deluge daemon user")
+    parser.add_argument('--password', help="deluge daemon password (omit to be asked)")
 
     args = parser.parse_args()
     log_location = os.getcwd()
+
+    if args.user is not None and args.password is None:
+        args.password = getpass("Password for {}: ".format(args.user))
 
     resumePathParts = args.resumePath.split(os.path.sep)
     os.chdir(os.path.sep.join(resumePathParts[:-1]))
@@ -197,7 +201,12 @@ def main():
 
     Exporter = UtorrentToDeluge(pathToResumeDat)
     Exporter.setLogPath(log_location)
-    d = client.connect()
+
+    d = client.connect(
+        args.host,
+        args.port,
+        args.user if args.user is not None else '',
+        args.password if args.password is not None else '')
     d.addCallback(Exporter.begin_export)
     d.addErrback(Exporter.could_not_connect)
     reactor.run()
