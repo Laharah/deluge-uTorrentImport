@@ -7,11 +7,30 @@ If anyone would like to tell me how to make this script in to a user friendly, s
 
 # Requirements
 
-Python
-a version of Deluge for windows that matches a python version you have installed. (click on "py2.7" if you have python 2.7)
-Twisted installed for python
+* Python
+* a version of Deluge for windows that matches a python version you have installed. (click on "py2.7" if you have python 2.7)
+* Twisted installed for python
 
-# Directions
+# Usage
+
+    usage: uTorrent_to_Deluge.py [-h] [--host HOST] [--port PORT] [--user USER]                                   
+                                 [--password PASSWORD] [--no-wine-mapping]                                        
+                                 [resumePath]                                                                     
+                                                                                                              
+    Import torrents from uTorrent into Deluge.                                                                    
+                                                                                                              
+    positional arguments:                                                                                         
+      resumePath            path to uTorrent resume.dat file                                                          
+                                                                                                                  
+    optional arguments:                                                                                           
+      -h, --help            show this help message and exit                                                       
+      --host HOST           deluge daemon host (default: 127.0.0.1)                                               
+      --port PORT, -p PORT  deluge daemon port (default: 58846)                                                   
+      --user USER, -u USER  deluge daemon user (default: None)                                                    
+      --password PASSWORD   deluge daemon password (omit to be asked) (default: None)                                                                                 
+      --no-wine-mapping     disable wine drive letter mapping (default: False)  
+
+# Directions (Windows)
 
 Place the script in the deluge-1.3.6.egg folder in your deluge install path. (usually C:\Program Files (x86)\Deluge\deluge-1.3.6-py2.6.egg)
 **YOU MUST DO THIS FOR THE SCRIPT TO RUN UNLESS YOU HAVE INSTALLED DELUGE AS A PYTHON PATH**
