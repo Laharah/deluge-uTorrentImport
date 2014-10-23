@@ -3,6 +3,7 @@ __author__ = 'Laharah'
 
 import os
 import os.path
+import re
 import sys
 from getpass import getuser, getpass
 from base64 import b64encode
@@ -21,15 +22,25 @@ class UtorrentToDeluge():
         self.couldNotAdd = []
         self.torrentCounter = 0
         self.logFile = 'uTorrent_import_errors.txt'
+        self.torrentBlacklist = ['.fileguard', 'rec']
+        self.wineDrives = None
 
     def setLogPath(self, path):
         self.logFile = os.path.join(path, 'uTorrent_import_errors.txt')
+
+    def enable_wine_drive_mapping(self):
+        devs = os.path.join(os.path.expanduser('~'), '.wine/dosdevices')
+        if os.path.isdir(devs):
+            self.wineDrives = {}
+            print 'WINE drive mappings:'
+            for drive in [l for l in os.listdir(devs) if re.match('^[A-Z]:$', l, re.IGNORECASE)]:
+                self.wineDrives[drive.lower()] = os.path.realpath(os.path.join(devs, drive))
+                print drive.upper(), '=>', self.wineDrives[drive.lower()]
 
     def read_resume_dat(self, filename):
         try:
             f = open(filename, 'rb')
         except:
-            print 'could not find or open resume.dat'
             self.log_error(['could not find or open resume.dat'])
         raw = f.read()
         f.close()
@@ -42,8 +53,44 @@ class UtorrentToDeluge():
         except:
             print 'could not open log file'
         for line in errors:
-            f.write(unicode(line, 'UTF-8') + '\n')
+            print line
+            f.write(line + '\n')
         f.close()
+
+    def wine_map_path(self, path):
+        mapped = path
+        drive = re.match('^([A-Z]:)', path, re.IGNORECASE)
+        try:
+            if self.wineDrives is not None and drive is not None:
+                mapped = self.wineDrives[drive.group(1).lower()] + path[2:]
+        except KeyError:
+            print 'No WINE mapping for drive', drive.group(1)
+        return mapped
+
+    def add_torrent(self, torrent, data):
+        if torrent in self.torrentBlacklist:
+            return
+
+        fullSavePath = unicode(data['path'], 'utf-8')
+
+        topLevelTitle = fullSavePath.split('\\')[-1]
+        delugeSavePath = os.sep.join(fullSavePath.split('\\')[:-1])
+        fileDump = b64encode(open(unicode(torrent, 'utf-8'), 'rb').read())
+
+        fullSavePath = self.wine_map_path(fullSavePath)
+        delugeSavePath = self.wine_map_path(delugeSavePath)
+
+        self.torrentsToAdd[fullSavePath] = False
+        self.torrentCounter += 1
+        client.core.add_torrent_file(
+            unicode(torrent, 'utf-8'),
+            fileDump,
+            options={'download_location': delugeSavePath, 'add_paused': True}
+        ).addCallback(
+            self.get_torrent_data,
+            topLevelTitle,
+            fullSavePath)
+
 
     def begin_export(self, result):
         print "Connection was successful! (Result: {})".format(result)
@@ -54,52 +101,32 @@ class UtorrentToDeluge():
         print 'file_renamed registered'
         data = self.read_resume_dat(self.rsmDataPath)
         failures = {}
-        superErrors = {}
 
-        for torrent in data.keys():
-            if torrent == '.fileguard':
-                continue
-
-            try:
-                fullSavePath = unicode(data[torrent]['path'], 'utf-8')
-            except:
-                fullSavePath = None
-                superErrors[fullSavePath] = 1
-            if fullSavePath != None:
-                topLevelTitle = fullSavePath.split('\\')[-1]
-                delugeSavePath = os.sep.join(fullSavePath.split('\\')[:-1])
-            try:
-                fileDump = b64encode(open(unicode(torrent, 'utf-8'), 'rb').read())
-            except:
-                fileDump = None
-                print 'FAILURE!!', torrent
-                failures[torrent] = data[torrent]
-
-            if fullSavePath != None:
-                self.torrentsToAdd[fullSavePath] = False
-                self.torrentCounter += 1
-                client.core.add_torrent_file(unicode(torrent, 'utf-8'), fileDump,
-                                             options={'download_location': delugeSavePath}).addCallback(
-                    self.get_torrent_data,
-                    topLevelTitle,
-                    fullSavePath)
         print 'Attempting to add Torrents...'
+        for torrent in data.keys():
+            try:
+                self.add_torrent(torrent, data[torrent])
+            except:
+                print 'FAILURE', torrent, sys.exc_info()
+                failures[torrent] = data[torrent]
 
     def list_torrents(self, val, torrent_id):
         print torrent_id, val
 
 
     def torrent_folder_renamed(self, id, old, new):
-        client.core.force_recheck([id])
-        del self.waitingOnTorrents[id]
+        print u"Folder renamed, checking ({} => {})".format(old,new)
+        self.torrent_check(id)
         self.check_done()
-
 
     def torrent_file_renamed(self, id, index, name):
-        client.core.force_recheck([id])
-        del self.waitingOnTorrents[id]
+        print u"File renamed, checking ({})".format(name)
+        self.torrent_check(id)
         self.check_done()
 
+    def torrent_check(self, id):
+        client.core.force_recheck([id])
+        self.waitingOnTorrents.pop(id, None)
 
     def torrent_accounting(self, fullSavePath, accountedFor):
         self.torrentCounter -= 1
@@ -116,9 +143,6 @@ class UtorrentToDeluge():
                     failedTorrents.append(torrent + ' ')
             if len(failedTorrents) > 0:
                 self.log_error(['Could not load the following torrents:'] + failedTorrents)
-                print 'Could not load the following torrents:'
-                for torrent in failedTorrents:
-                    print torrent
 
             self.disconnect()
 
@@ -141,11 +165,14 @@ class UtorrentToDeluge():
 
 
     def get_torrent_data(self, torrent_id, topLevelTitle, fullSavePath):
+        done = len(self.torrentsToAdd) - self.torrentCounter
+        print u"Added {}/{} {} ({})".format(done, len(self.torrentsToAdd), topLevelTitle, fullSavePath)
         if torrent_id == None:
             client.core.get_torrents_status({'name': topLevelTitle}, ['save_path', 'name']).addCallback(
                 self.check_already_exists, fullSavePath)
             return
         client.core.pause_torrent([torrent_id])
+        self.waitingOnTorrents[torrent_id] = True
         self.torrent_accounting(fullSavePath, True)
         client.core.get_torrent_status(torrent_id, ['name', 'files', 'save_path']).addCallback(self.resolve_paths,
                                                                                                torrent_id,
@@ -156,17 +183,24 @@ class UtorrentToDeluge():
         saveName = topLevelTitle
         if len(info['files']) > 1:
             mainFolder = info['files'][0]['path'].split('/')[0]
-            client.core.rename_folder(torrent_id, mainFolder + '/', saveName)
+            if mainFolder != saveName:
+                print u"Renaming {} => {}".format(mainFolder, saveName)
+                client.core.rename_folder(torrent_id, mainFolder + '/', saveName)
+                return
         else:
-            client.core.rename_files(torrent_id, [(0, saveName)])
-        self.waitingOnTorrents[torrent_id] = 0
+            mainFile = info['files'][0]['path']
+            if mainFile != saveName:
+                print u"Renaming {} => {}".format(mainFile, saveName)
+                client.core.rename_files(torrent_id, [(0, saveName)])
+                return
 
+        # file/folder not renamed, check now and remove from waiting list
+        self.torrent_check(torrent_id)
+        self.check_done()
 
     def could_not_connect(self, result):
-        print "connection failed!"
-        error = 'Please ensure that deluge is running and is in client/server mode, not "classic" mode.'
-        print error
-        self.log_error([error])
+        self.log_error(['Connection failed!',
+                        'Please ensure that deluge is running and is in client/server mode, not "classic" mode.'])
         self.disconnect()
 
 def defaultResumePath():
@@ -188,6 +222,7 @@ def main():
     parser.add_argument('--port', '-p', type=int, default=58846, help="deluge daemon port")
     parser.add_argument('--user', '-u', help="deluge daemon user")
     parser.add_argument('--password', help="deluge daemon password (omit to be asked)")
+    parser.add_argument('--no-wine-mapping', action='store_true', help="disable wine drive letter mapping")
 
     args = parser.parse_args()
     log_location = os.getcwd()
@@ -201,6 +236,9 @@ def main():
 
     Exporter = UtorrentToDeluge(pathToResumeDat)
     Exporter.setLogPath(log_location)
+
+    if not args.no_wine_mapping:
+        Exporter.enable_wine_drive_mapping()
 
     d = client.connect(
         args.host,

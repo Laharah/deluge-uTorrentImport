@@ -5,14 +5,13 @@ I have never distributed anything in python, so I have no idea how to include th
 
 If anyone would like to tell me how to make this script in to a user friendly, self contained egg, or wants to do it themselves I'd be glad to put it up here. 
 
-Requirements:
+# Requirements
 
 Python
 a version of Deluge for windows that matches a python version you have installed. (click on "py2.7" if you have python 2.7)
 Twisted installed for python
 
-Directions:
-Download the script here:
+# Directions
 
 Place the script in the deluge-1.3.6.egg folder in your deluge install path. (usually C:\Program Files (x86)\Deluge\deluge-1.3.6-py2.6.egg)
 **YOU MUST DO THIS FOR THE SCRIPT TO RUN UNLESS YOU HAVE INSTALLED DELUGE AS A PYTHON PATH**
@@ -27,11 +26,18 @@ Torrents will be added in the paused state and will then be set to do a recheck 
 
 The script will output a log of any torrents that could not be added successfully.
 
-***NOTES***
-The script assumes that your uTorrent resume.dat is in the default location of %appdata%\uTorrent. if this is not the case, you must either include the full path of resume.dat as the first argument to the script or drag and drop resume.dat onto the script file.
+# Notes
 
-Do not run the script on a backup or moved copy of resume.dat. uTorrent uses relative paths when storing the resume data so the script uses the resume.dat path as a relative path to find the .torrent files. The script dosen't edit resume.dat, but if you're paranoid you can make a backup beforehand.
+The script assumes that your uTorrent resume.dat is in the default location of %APPDATA%\uTorrent. if this is not the case, you must either include the full path of resume.dat as the first argument to the script or drag and drop resume.dat onto the script file.
+
+Do not run the script on a backup or moved copy of resume.dat. uTorrent uses relative paths when storing the resume data so the script uses the resume.dat path as a relative path to find the .torrent files. The script doesn't edit resume.dat, but if you're paranoid you can make a backup beforehand.
 
 I didn't comment the code because I'm lazy (sorry). If you've got questions or concerns let me know and I can answer them or go back and do the comments if there's a demand for them.
 
-The code only works on windows. Feel free to edit the script for use on unix base machines. I was originally only writing this for myself so I didn't bother to make it very flexible, (sorry again about the lack of comments) which means it would prob be a pain in the ass.
+# Linux
+
+On Linux, the script first looks in the [WINE](https://www.winehq.org/) configuration (~/.wine/drive_c/users/$USER/Application Data/uTorrent/resume.dat), and then in the user home dir (~/uTorrent/resume.dat). Of course, you can always give any other path as an argument.
+
+In case of WINE, the script will try to resolve drive letter mappings (defined in ~/.wine/dosdevices) and replace them with their real Linux paths. If you don't fancy that, just add the '--no-wine-mapping' argument.
+
+Please note that this script was just tested with the Windows version of uTorrent 3.4 running within WINE - no idea how any other version behaves.
