@@ -54,7 +54,7 @@ class UtorrentToDeluge():
             print 'could not open log file'
         for line in errors:
             print line
-            f.write(line + '\n')
+            f.write((line + '\n').encode('utf8'))
         f.close()
 
     def wine_map_path(self, path):
@@ -115,12 +115,12 @@ class UtorrentToDeluge():
 
 
     def torrent_folder_renamed(self, id, old, new):
-        print u"Folder renamed, checking ({} => {})".format(old,new)
+        print u"Folder renamed, checking ({} => {})".format(old,new).encode('utf8')
         self.torrent_check(id)
         self.check_done()
 
     def torrent_file_renamed(self, id, index, name):
-        print u"File renamed, checking ({})".format(name)
+        print u"File renamed, checking ({})".format(name).encode('utf8')
         self.torrent_check(id)
         self.check_done()
 
@@ -166,7 +166,8 @@ class UtorrentToDeluge():
 
     def get_torrent_data(self, torrent_id, topLevelTitle, fullSavePath):
         done = len(self.torrentsToAdd) - self.torrentCounter
-        print u"Added {}/{} {} ({})".format(done, len(self.torrentsToAdd), topLevelTitle, fullSavePath)
+        print u"Added {}/{} {} ({})".format(done, len(self.torrentsToAdd),
+                                            topLevelTitle, fullSavePath).encode('utf8')
         if torrent_id == None:
             client.core.get_torrents_status({'name': topLevelTitle}, ['save_path', 'name']).addCallback(
                 self.check_already_exists, fullSavePath)
@@ -184,13 +185,13 @@ class UtorrentToDeluge():
         if len(info['files']) > 1:
             mainFolder = info['files'][0]['path'].split('/')[0]
             if mainFolder != saveName:
-                print u"Renaming {} => {}".format(mainFolder, saveName)
+                print u"Renaming {} => {}".format(mainFolder, saveName).encode('utf8')
                 client.core.rename_folder(torrent_id, mainFolder + '/', saveName)
                 return
         else:
             mainFile = info['files'][0]['path']
             if mainFile != saveName:
-                print u"Renaming {} => {}".format(mainFile, saveName)
+                print u"Renaming {} => {}".format(mainFile, saveName).encode('utf8')
                 client.core.rename_files(torrent_id, [(0, saveName)])
                 return
 
