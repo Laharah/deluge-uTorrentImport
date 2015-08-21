@@ -200,7 +200,7 @@ class UtorrentToDeluge():
         self.check_done()
 
     def could_not_connect(self, result):
-        self.log_error(['Connection failed!',
+        self.log_error(['Connection failed!', 'with result: {}'.format(result),
                         'Please ensure that deluge is running and is in client/server mode, not "classic" mode.'])
         self.disconnect()
 
