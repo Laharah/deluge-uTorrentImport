@@ -170,6 +170,7 @@ class Core(CorePluginBase):
             if torrent in self.config["torrent_blacklist"]:
                 log.debug('skipping {0}'.format(torrent))
                 continue
+            torrent = os.path.abspath(os.path.join(os.path.dirname(resume_data), torrent))
 
             try:
                 filedump = base64.encodestring(open(unicode(torrent, 'utf-8'), 'rb').read())
