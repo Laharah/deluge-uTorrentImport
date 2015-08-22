@@ -42,7 +42,6 @@ import re
 import base64
 from getpass import getuser
 
-
 from deluge.ui.common import TorrentInfo
 from deluge.bencode import bdecode
 from deluge.log import LOG as log
@@ -84,19 +83,27 @@ class Core(CorePluginBase):
     @export
     def get_default_resume_path(self):
         log.debug('Getting resume.dat path...')
-        appData = os.path.expanduser('~')
+        app_datas = []
+        user_home = os.path.expanduser('~')
         if os.getenv('APPDATA'):
-            appData = os.getenv('APPDATA')
-        elif os.path.isdir(os.path.join(appData, '.wine')):
-            appData = os.path.join(appData, '.wine/drive_c/users', getuser(),
-                                   'Application Data')
-        resume_path = os.path.join(appData, 'uTorrent', 'resume.dat')
-        if not os.path.exists(resume_path) or not os.path.isfile(resume_path):
-            log.debug('no resume.dat found...')
-            return None
-        else:
-            log.debug('resume.dat found at {0}'.format(resume_path))
-            return resume_path
+            app_datas.append(os.getenv('APPDATA'))
+        app_datas.append(os.path.join(user_home, '.wine/drive_c/users', getuser(),
+                                      'Application Data'))
+        app_datas.append(os.path.join(user_home, 'Library', 'Application Support'))
+        app_datas.append('/opt')
+        app_datas.append(user_home)
+
+        for app_data in app_datas:
+            resume_path = os.path.join(app_data, 'uTorrent', 'resume.dat')
+            if not os.path.exists(resume_path) or not os.path.isfile(resume_path):
+                log.debug('no resume.dat found at {0}...'.format(app_data))
+
+            else:
+                log.debug('resume.dat found at {0}'.format(resume_path))
+                return resume_path
+
+        log.debug('no resume.dat could be found')
+        return None
 
     def read_resume_data(self, path):
         try:
