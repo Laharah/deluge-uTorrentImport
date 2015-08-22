@@ -66,14 +66,18 @@ class GtkUI(GtkPluginBase):
 
     @defer.inlineCallbacks
     def on_show_prefs(self):
-        client.utorrentimport.get_config().addCallback(self.cb_get_config)
+        log.debug("showing utorrentimport prefs")
+        # config = yield client.utorrentimport.get_config()
+        # log.debug('got config, setting')
+        # self.cb_get_config(config)
         signal_dictionary = {
             'on_import_button_clicked': self.on_import_button_clicked
         }
 
         self.glade.signal_autoconnect(signal_dictionary)
-
+        log.debug('utorrentimport: signals hooked!')
         default_resume = yield client.utorrentimport.get_default_resume_path()
+        log.debug('utorrentimport: got resume.dat path!')
         if default_resume:
             self.glade.get_widget('resume_dat_entry').set_text(default_resume)
 
@@ -81,7 +85,9 @@ class GtkUI(GtkPluginBase):
     def on_import_button_clicked(self, button):
         self.toggle_button(button)
         resume_path = self.glade.get_widget('resume_dat_entry').get_text()
+        log.debug('sending import command...')
         result = yield client.utorrentimport.begin_import(resume_path)
+        log.debug('recieved result! {0}'.format(result))
         self.toggle_button(button)
 
     def toggle_button(self, button):

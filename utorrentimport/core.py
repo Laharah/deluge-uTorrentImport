@@ -39,9 +39,11 @@
 
 import os
 import re
-from base64 import b64encode
+import base64
 from getpass import getuser
 
+
+from deluge.ui.common import TorrentInfo
 from deluge.bencode import bdecode
 from deluge.log import LOG as log
 from deluge.plugins.pluginbase import CorePluginBase
@@ -54,7 +56,7 @@ from common import Log
 
 log = Log()
 
-DEFAULT_PREFS = {"torrent_blacklist": {'.filegaurd', 'rec'}, "wine_drives": {}}
+DEFAULT_PREFS = {"torrent_blacklist": {'.fileguard', 'rec'}, "wine_drives": {}}
 
 
 class Core(CorePluginBase):
@@ -80,8 +82,8 @@ class Core(CorePluginBase):
     #########
 
     @export
-    @staticmethod
-    def get_default_resume_path():
+    def get_default_resume_path(self):
+        log.debug('Getting resume.dat path...')
         appData = os.path.expanduser('~')
         if os.getenv('APPDATA'):
             appData = os.getenv('APPDATA')
@@ -90,8 +92,10 @@ class Core(CorePluginBase):
                                    'Application Data')
         resume_path = os.path.join(appData, 'uTorrent', 'resume.dat')
         if not os.path.exists(resume_path) or not os.path.isfile(resume_path):
+            log.debug('no resume.dat found...')
             return None
         else:
+            log.debug('resume.dat found at {0}'.format(resume_path))
             return resume_path
 
     def read_resume_data(self, path):
@@ -168,11 +172,11 @@ class Core(CorePluginBase):
                 continue
 
             try:
-                filedump = b64encode(open(unicode(torrent, 'utf-8'), 'rb').read())
+                filedump = base64.encodestring(open(unicode(torrent, 'utf-8'), 'rb').read())
             except IOError:
                 log.error('Could not open torrent {0}! skipping...'.format(torrent))
                 continue
-
+            log.debug(filedump)
             ut_save_path = unicode(info['path'], 'utf-8')
             torrent_root = os.path.basename(ut_save_path)
             deluge_storage_path = os.path.dirname(ut_save_path)
@@ -181,7 +185,7 @@ class Core(CorePluginBase):
             deluge_storage_path = self.wine_path_check(deluge_storage_path)
 
             options = {'download_location': deluge_storage_path, 'add_paused': True}
-            torrent_id = self.torrent_manager.add(filename=unicode(torrent, 'utf-8'),
+            torrent_id = component.get("Core").add_torrent_file(torrent_root,
                                                   filedump=filedump,
                                                   options=options)
 
