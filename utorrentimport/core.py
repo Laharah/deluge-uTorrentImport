@@ -53,14 +53,13 @@ from common import Log
 
 log = Log()
 
-DEFAULT_PREFS = {
-    "torrent_blacklist": {'.filegaurd', 'rec'},
-    "wine_drives": {}
-}
+DEFAULT_PREFS = {"torrent_blacklist": {'.filegaurd', 'rec'}, "wine_drives": {}}
+
 
 class Core(CorePluginBase):
     def enable(self):
-        self.config = deluge.configmanager.ConfigManager("utorrentimport.conf", DEFAULT_PREFS)
+        self.config = deluge.configmanager.ConfigManager("utorrentimport.conf",
+                                                         DEFAULT_PREFS)
         self.torrent_manager = component.get("TorrentManager")
 
     def disable(self):
@@ -79,14 +78,20 @@ class Core(CorePluginBase):
     #  Section: Utilities
     #########
 
+    @export
     @staticmethod
-    def defaultResumePath():
+    def get_default_resume_path():
         appData = os.path.expanduser('~')
         if os.getenv('APPDATA'):
             appData = os.getenv('APPDATA')
         elif os.path.isdir(os.path.join(appData, '.wine')):
-            appData = os.path.join(appData, '.wine/drive_c/users', getuser(), 'Application Data')
-        return os.path.join(appData, 'uTorrent', 'resume.dat')
+            appData = os.path.join(appData, '.wine/drive_c/users', getuser(),
+                                   'Application Data')
+        resume_path = os.path.join(appData, 'uTorrent', 'resume.dat')
+        if not os.path.exists(resume_path) or not os.path.isfile(resume_path):
+            return None
+        else:
+            return resume_path
 
     def find_wine_drives(self):
         drives = os.path.join(os.path.expanduser('~'), '.wine/dosdevices')
@@ -131,7 +136,6 @@ class Core(CorePluginBase):
                                                        torrent_root).encode('utf-8'))
                 torrent.rename_files([(0, torrent_root)])
 
-
     #########
     #  Section: Public API
     #########
@@ -143,7 +147,7 @@ class Core(CorePluginBase):
         resume_data: path to utorrent resume data
         """
         self.find_wine_drives()
-        data = self.reade_resume_data(resume_data)
+        data = self.read_resume_data(resume_data)
         added = []
         failed = []
         for torrent, info in data.iteritems():
@@ -178,7 +182,6 @@ class Core(CorePluginBase):
                 added.append(torrent_root)
 
         return added, failed
-
 
     @export
     def set_config(self, config):
