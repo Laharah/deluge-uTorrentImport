@@ -43,10 +43,9 @@ from deluge.log import LOG as log
 from deluge.ui.client import client
 from deluge.plugins.pluginbase import GtkPluginBase
 import deluge.component as component
-import deluge.common
 from twisted.internet import defer
 
-from core import DEFAULT_PREFS
+
 from common import get_resource
 
 
@@ -57,6 +56,12 @@ class GtkUI(GtkPluginBase):
         component.get("Preferences").add_page("uTorrentImport", self.glade.get_widget("prefs_box"))
         component.get("PluginManager").register_hook("on_apply_prefs", self.on_apply_prefs)
         component.get("PluginManager").register_hook("on_show_prefs", self.on_show_prefs)
+        signal_dictionary = {'on_import_button_clicked': self.on_import_button_clicked}
+
+        self.glade.signal_autoconnect(signal_dictionary)
+        self.use_wine_mappings = self.glade.get_widget('use_wine_mappings')
+        self.recheck_all = self.glade.get_widget('recheck_all')
+        self.resume_dat_entry = self.glade.get_widget('resume_dat_entry')
 
     def disable(self):
         component.get("Preferences").remove_page("uTorrentImport")
@@ -70,16 +75,10 @@ class GtkUI(GtkPluginBase):
 
     @defer.inlineCallbacks
     def on_show_prefs(self):
-        self.use_wine_mappings = self.glade.get_widget('use_wine_mappings')
-        self.recheck_all = self.glade.get_widget('recheck_all')
-        self.resume_dat_entry = self.glade.get_widget('resume_dat_entry')
         log.debug("showing utorrentimport prefs")
         self.config = yield client.utorrentimport.get_config()
         log.debug('got config: {0}'.format(self.config))
         self.populate_config(self.config)
-        signal_dictionary = {'on_import_button_clicked': self.on_import_button_clicked}
-
-        self.glade.signal_autoconnect(signal_dictionary)
         log.debug('utorrentimport: signals hooked!')
         if not self.config['previous_resume_dat_path']:
             default_resume = yield client.utorrentimport.get_default_resume_path()
