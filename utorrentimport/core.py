@@ -55,7 +55,13 @@ from common import Log
 
 log = Log()
 
-DEFAULT_PREFS = {"torrent_blacklist": ['.fileguard', 'rec'], "wine_drives": {}}
+DEFAULT_PREFS = {
+    "torrent_blacklist": ['.fileguard', 'rec'],
+    "wine_drives": {},
+    "use_wine_mappings": False,
+    "recheck_all": False,
+    "previous_resume_dat_path": ''
+}
 
 
 class Core(CorePluginBase):
@@ -135,7 +141,7 @@ class Core(CorePluginBase):
             log.debug('No WINE mapping for drive {0}'.format(drive.group(1)))
         return mapped
 
-    def resolve_path_renames(self, torrent_id, torrent_root):
+    def resolve_path_renames(self, torrent_id, torrent_root, force_recheck=False):
         """
         resolves issues stemming from utorrent renames not encoded into the torrent
         torrent_id: torrent_id
@@ -149,6 +155,8 @@ class Core(CorePluginBase):
                 log.info(u'Renaming {0} => {1}'.format(main_folder,
                                                        torrent_root).encode('utf-8'))
                 torrent.rename_folder(main_folder, torrent_root)
+                torrent.force_recheck()
+                return
 
         else:
             main_file = files[0]['path']
@@ -156,13 +164,19 @@ class Core(CorePluginBase):
                 log.info(u'Renaming {0} => {1}'.format(main_file,
                                                        torrent_root).encode('utf-8'))
                 torrent.rename_files([(0, torrent_root)])
+                torrent.force_recheck()
+                return
+
+        if force_recheck:
+            torrent.force_recheck()
+            return
 
     #########
     #  Section: Public API
     #########
 
     @export
-    def begin_import(self, resume_data=None):
+    def begin_import(self, resume_data=None, use_wine_mappings=False, recheck_all=False):
         """
         attempts to add utorrent torrents to deluge
         resume_data: path to utorrent resume data
@@ -180,7 +194,8 @@ class Core(CorePluginBase):
             torrent = os.path.abspath(os.path.join(os.path.dirname(resume_data), torrent))
 
             try:
-                filedump = base64.encodestring(open(unicode(torrent, 'utf-8'), 'rb').read())
+                filedump = base64.encodestring(
+                    open(unicode(torrent, 'utf-8'), 'rb').read())
             except IOError:
                 log.error('Could not open torrent {0}! skipping...'.format(torrent))
                 continue
@@ -195,20 +210,22 @@ class Core(CorePluginBase):
             torrent_root = os.path.basename(ut_save_path)
             deluge_storage_path = os.path.dirname(ut_save_path)
 
-            torrent_root = self.wine_path_check(torrent_root)
-            deluge_storage_path = self.wine_path_check(deluge_storage_path)
+            if use_wine_mappings:
+                torrent_root = self.wine_path_check(torrent_root)
+                deluge_storage_path = self.wine_path_check(deluge_storage_path)
 
+            log.info('Adding torrent {0} to deluge.'.format(torrent_root))
             options = {'download_location': deluge_storage_path, 'add_paused': True}
             torrent_id = component.get("Core").add_torrent_file(torrent_root,
-                                                  filedump=filedump,
-                                                  options=options)
+                                                                filedump=filedump,
+                                                                options=options)
 
             if torrent_id is None:
                 log.info('Torrent {0} was not added, may already exsist...'.format(
                     torrent))
             else:
-                self.resolve_path_renames(torrent_id, torrent_root)
-                self.torrent_manager[torrent_id].force_recheck()
+                self.resolve_path_renames(torrent_id, torrent_root,
+                                          force_recheck=recheck_all)
                 added.append(torrent_root)
 
         return added, failed
@@ -216,6 +233,7 @@ class Core(CorePluginBase):
     @export
     def set_config(self, config):
         """Sets the config dictionary"""
+        log.debug('updating config dictionary: {0}'.format(config))
         for key in config.keys():
             self.config[key] = config[key]
         self.config.save()
@@ -223,4 +241,5 @@ class Core(CorePluginBase):
     @export
     def get_config(self):
         """Returns the config dictionary"""
+        log.debug('{0}'.format(self.config.config))
         return self.config.config

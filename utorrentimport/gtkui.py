@@ -46,7 +46,9 @@ import deluge.component as component
 import deluge.common
 from twisted.internet import defer
 
+from core import DEFAULT_PREFS
 from common import get_resource
+
 
 class GtkUI(GtkPluginBase):
     def enable(self):
@@ -63,30 +65,37 @@ class GtkUI(GtkPluginBase):
 
     def on_apply_prefs(self):
         log.debug("applying prefs for uTorrentImport")
+        self.config.update(self.gather_settings())
+        client.utorrentimport.set_config(self.config)
 
     @defer.inlineCallbacks
     def on_show_prefs(self):
+        self.use_wine_mappings = self.glade.get_widget('use_wine_mappings')
+        self.recheck_all = self.glade.get_widget('recheck_all')
+        self.resume_dat_entry = self.glade.get_widget('resume_dat_entry')
         log.debug("showing utorrentimport prefs")
-        # config = yield client.utorrentimport.get_config()
-        # log.debug('got config, setting')
-        # self.cb_get_config(config)
-        signal_dictionary = {
-            'on_import_button_clicked': self.on_import_button_clicked
-        }
+        self.config = yield client.utorrentimport.get_config()
+        log.debug('got config: {0}'.format(self.config))
+        self.populate_config(self.config)
+        signal_dictionary = {'on_import_button_clicked': self.on_import_button_clicked}
 
         self.glade.signal_autoconnect(signal_dictionary)
         log.debug('utorrentimport: signals hooked!')
-        default_resume = yield client.utorrentimport.get_default_resume_path()
-        log.debug('utorrentimport: got resume.dat path!')
-        if default_resume:
-            self.glade.get_widget('resume_dat_entry').set_text(default_resume)
+        if not self.config['previous_resume_dat_path']:
+            default_resume = yield client.utorrentimport.get_default_resume_path()
+            log.debug('utorrentimport: got resume.dat path!')
+            if default_resume:
+                self.resume_dat_entry.set_text(default_resume)
 
     @defer.inlineCallbacks
     def on_import_button_clicked(self, button):
         self.toggle_button(button)
-        resume_path = self.glade.get_widget('resume_dat_entry').get_text()
+        settings = self.gather_settings()
         log.debug('sending import command...')
-        result = yield client.utorrentimport.begin_import(resume_path)
+        result = yield client.utorrentimport.begin_import(
+            settings['previous_resume_dat_path'],
+            use_wine_mappings=settings['use_wine_mappings'],
+            recheck_all=settings['recheck_all'])
         log.debug('recieved result! {0}'.format(result))
         self.toggle_button(button)
 
@@ -96,6 +105,15 @@ class GtkUI(GtkPluginBase):
         else:
             button.set_sensitive(True)
 
-    def cb_get_config(self, config):
-        "callback for on show_prefs"
-        pass
+    def populate_config(self, config):
+        """callback for on show_prefs"""
+        self.use_wine_mappings.set_active(config['use_wine_mappings'])
+        self.recheck_all.set_active(config['recheck_all'])
+        self.resume_dat_entry.set_text(config['previous_resume_dat_path'])
+
+    def gather_settings(self):
+        return {
+            'use_wine_mappings': self.use_wine_mappings.get_active(),
+            'recheck_all': self.recheck_all.get_active(),
+            'previous_resume_dat_path': self.resume_dat_entry.get_text()
+        }
