@@ -43,10 +43,12 @@ __plugin_name__ = "uTorrentImport"
 __author__ = "Laharah"
 __author_email__ = "laharah22+deluge@gmail.com"
 __version__ = "0.1"
-__url__ = ""
+__url__ = "https://github.com/Laharah/uTorrent_to_Deluge"
 __license__ = "GPLv3"
-__description__ = ""
-__long_description__ = """"""
+__description__ = "Import torrents from uTorrent"
+__long_description__ = """
+    Searches for a uTorrent resume.dat file, parses it, and loads the torrents into
+    deluge."""
 __pkg_data__ = {__plugin_name__.lower(): ["template/*", "data/*"]}
 
 setup(
