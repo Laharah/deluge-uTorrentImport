@@ -176,7 +176,6 @@ class Core(CorePluginBase):
             except IOError:
                 log.error('Could not open torrent {0}! skipping...'.format(torrent))
                 continue
-            log.debug(filedump)
             ut_save_path = unicode(info['path'], 'utf-8')
             torrent_root = os.path.basename(ut_save_path)
             deluge_storage_path = os.path.dirname(ut_save_path)
