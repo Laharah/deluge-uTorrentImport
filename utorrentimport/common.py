@@ -37,6 +37,26 @@
 #    statement from all source files in the program, then also delete it here.
 #
 
+from deluge.log import LOG as delugelog
+
 def get_resource(filename):
     import pkg_resources, os
     return pkg_resources.resource_filename("utorrentimport", os.path.join("data", filename))
+
+class Log(object):
+    """small wrapper class for formatting log outputs"""
+
+    def error(self, msg):
+        delugelog.error("[uTorrentImport] {}".format(msg))
+
+    def info(self, msg):
+        delugelog.info("[uTorrentImport] {}".format(msg))
+
+    def debug(self, msg):
+        delugelog.debug("[uTorrentImport] {}".format(msg))
+
+    def critical(self, msg):
+        delugelog.critical("[uTorrentImport] {}".format(msg))
+
+    def warning(self, msg):
+        delugelog.warning("[uTorrentImport] {}".format(msg))
