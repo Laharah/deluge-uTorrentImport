@@ -44,6 +44,7 @@ from deluge.ui.client import client
 from deluge.plugins.pluginbase import GtkPluginBase
 import deluge.component as component
 import deluge.common
+from twisted.internet import defer
 
 from common import get_resource
 
@@ -62,14 +63,33 @@ class GtkUI(GtkPluginBase):
 
     def on_apply_prefs(self):
         log.debug("applying prefs for uTorrentImport")
-        config = {
-            "test":self.glade.get_widget("txt_test").get_text()
-        }
-        client.utorrentimport.set_config(config)
 
+    @defer.inlineCallbacks
     def on_show_prefs(self):
         client.utorrentimport.get_config().addCallback(self.cb_get_config)
+        signal_dictionary = {
+            'on_import_button_clicked': self.on_import_button_clicked
+        }
+
+        self.glade.signal_autoconnect(signal_dictionary)
+
+        default_resume = yield client.utorrentimport.get_default_resume_path()
+        if default_resume:
+            self.glade.get_widget('resume_dat_entry').set_text(default_resume)
+
+    @defer.inlineCallbacks
+    def on_import_button_clicked(self, button):
+        self.toggle_button(button)
+        resume_path = self.glade.get_widget('resume_dat_entry').get_text()
+        result = yield client.utorrentimport.begin_import(resume_path)
+        self.toggle_button(button)
+
+    def toggle_button(self, button):
+        if button.get_sensitive():
+            button.set_sensitive(False)
+        else:
+            button.set_sensitive(True)
 
     def cb_get_config(self, config):
         "callback for on show_prefs"
-        self.glade.get_widget("txt_test").set_text(config["test"])
+        pass

@@ -42,6 +42,7 @@ import re
 from base64 import b64encode
 from getpass import getuser
 
+from deluge.bencode import bdecode
 from deluge.log import LOG as log
 from deluge.plugins.pluginbase import CorePluginBase
 import deluge.component as component
@@ -92,6 +93,15 @@ class Core(CorePluginBase):
             return None
         else:
             return resume_path
+
+    def read_resume_data(self, path):
+        try:
+            with open(path, 'rb') as f:
+                raw = f.read()
+        except (IOError, OSError) as e:
+            log.error('Could not open {0}. Reason{1}'.format(path, e))
+            return None
+        return bdecode(raw)
 
     def find_wine_drives(self):
         drives = os.path.join(os.path.expanduser('~'), '.wine/dosdevices')
@@ -148,6 +158,8 @@ class Core(CorePluginBase):
         """
         self.find_wine_drives()
         data = self.read_resume_data(resume_data)
+        if not data:
+            return None
         added = []
         failed = []
         for torrent, info in data.iteritems():
