@@ -47,16 +47,16 @@ class Log(object):
     """small wrapper class for formatting log outputs"""
 
     def error(self, msg):
-        delugelog.error("[uTorrentImport] {}".format(msg))
+        delugelog.error("[uTorrentImport] {0}".format(msg))
 
     def info(self, msg):
-        delugelog.info("[uTorrentImport] {}".format(msg))
+        delugelog.info("[uTorrentImport] {0}".format(msg))
 
     def debug(self, msg):
-        delugelog.debug("[uTorrentImport] {}".format(msg))
+        delugelog.debug("[uTorrentImport] {0}".format(msg))
 
     def critical(self, msg):
-        delugelog.critical("[uTorrentImport] {}".format(msg))
+        delugelog.critical("[uTorrentImport] {0}".format(msg))
 
     def warning(self, msg):
-        delugelog.warning("[uTorrentImport] {}".format(msg))
+        delugelog.warning("[uTorrentImport] {0}".format(msg))
