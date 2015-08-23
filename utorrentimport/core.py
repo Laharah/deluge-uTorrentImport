@@ -211,7 +211,7 @@ class Core(CorePluginBase):
                     torrent_root = self.wine_path_check(torrent_root)
                     deluge_storage_path = self.wine_path_check(deluge_storage_path)
 
-                log.info('Attempting to add torrent {0} to deluge.'.format(torrent_root))
+                log.info('Adding {0} to deluge.'.format(torrent_root))
                 options = {'download_location': deluge_storage_path, 'add_paused': True}
                 torrent_id = component.get("Core").add_torrent_file(torrent_root,
                                                                     filedump=filedump,

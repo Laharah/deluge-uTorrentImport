@@ -51,8 +51,12 @@ class GtkUI(GtkPluginBase):
     def enable(self):
         self.glade = gtk.glade.XML(get_resource("config.glade"))
 
-        component.get("Preferences").add_page("uTorrentImport", self.glade.get_widget("prefs_box"))
-        component.get("PluginManager").register_hook("on_apply_prefs", self.on_apply_prefs)
+        component.get("Preferences").add_page("uTorrentImport",
+                                              self.glade.get_widget("prefs_box"))
+
+        component.get("PluginManager").register_hook("on_apply_prefs",
+                                                     self.on_apply_prefs)
+
         component.get("PluginManager").register_hook("on_show_prefs", self.on_show_prefs)
         signal_dictionary = {'on_import_button_clicked': self.on_import_button_clicked}
 
@@ -66,8 +70,11 @@ class GtkUI(GtkPluginBase):
 
     def disable(self):
         component.get("Preferences").remove_page("uTorrentImport")
-        component.get("PluginManager").deregister_hook("on_apply_prefs", self.on_apply_prefs)
-        component.get("PluginManager").deregister_hook("on_show_prefs", self.on_show_prefs)
+        component.get("PluginManager").deregister_hook("on_apply_prefs",
+                                                       self.on_apply_prefs)
+
+        component.get("PluginManager").deregister_hook("on_show_prefs",
+                                                       self.on_show_prefs)
 
     def on_apply_prefs(self):
         log.debug("applying prefs for uTorrentImport")
@@ -75,11 +82,10 @@ class GtkUI(GtkPluginBase):
         client.utorrentimport.set_config(self.config)
 
     def log_to_user(self, level, message):
-        if level in {'error', 'info'}:
+        if level in ('error', 'info'):
             buffer = self.log_view.get_buffer()
             iter = buffer.get_end_iter()
-            buffer.insert(iter, message+'\n')
-
+            buffer.insert(iter, message + '\n')
 
     @defer.inlineCallbacks
     def on_show_prefs(self):

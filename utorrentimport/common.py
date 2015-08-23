@@ -41,12 +41,16 @@ from deluge.log import LOG as delugelog
 import deluge.component as component
 from events import uTorrentImportLoggingEvent
 
+
 def get_resource(filename):
     import pkg_resources, os
-    return pkg_resources.resource_filename("utorrentimport", os.path.join("data", filename))
+    return pkg_resources.resource_filename("utorrentimport", os.path.join("data",
+                                                                          filename))
+
 
 class Log(object):
     """small wrapper class for formatting log outputs"""
+
     def __init__(self):
         self.transmitting = False
         self.event_manager = component.get('EventManager')
