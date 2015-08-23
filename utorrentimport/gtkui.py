@@ -37,15 +37,13 @@
 #    statement from all source files in the program, then also delete it here.
 #
 
-import gtk
+from twisted.internet import defer
 
+import gtk
 from deluge.log import LOG as log
 from deluge.ui.client import client
 from deluge.plugins.pluginbase import GtkPluginBase
 import deluge.component as component
-from twisted.internet import defer
-
-
 from common import get_resource
 
 
@@ -62,6 +60,9 @@ class GtkUI(GtkPluginBase):
         self.use_wine_mappings = self.glade.get_widget('use_wine_mappings')
         self.recheck_all = self.glade.get_widget('recheck_all')
         self.resume_dat_entry = self.glade.get_widget('resume_dat_entry')
+        self.log_view = self.glade.get_widget('log_view')
+
+        client.register_event_handler('uTorrentImportLoggingEvent', self.log_to_user)
 
     def disable(self):
         component.get("Preferences").remove_page("uTorrentImport")
@@ -72,6 +73,13 @@ class GtkUI(GtkPluginBase):
         log.debug("applying prefs for uTorrentImport")
         self.config.update(self.gather_settings())
         client.utorrentimport.set_config(self.config)
+
+    def log_to_user(self, level, message):
+        if level in {'error', 'info'}:
+            buffer = self.log_view.get_buffer()
+            iter = buffer.get_end_iter()
+            buffer.insert(iter, message+'\n')
+
 
     @defer.inlineCallbacks
     def on_show_prefs(self):
@@ -89,6 +97,7 @@ class GtkUI(GtkPluginBase):
     @defer.inlineCallbacks
     def on_import_button_clicked(self, button):
         self.toggle_button(button)
+        self.log_view.get_buffer().set_text('')
         settings = self.gather_settings()
         log.debug('sending import command...')
         result = yield client.utorrentimport.begin_import(

@@ -49,7 +49,6 @@ from deluge.plugins.pluginbase import CorePluginBase
 import deluge.component as component
 import deluge.configmanager
 from deluge.core.rpcserver import export
-from twisted.internet import defer, threads
 
 from common import Log
 
@@ -187,46 +186,49 @@ class Core(CorePluginBase):
             return None
         added = []
         failed = []
-        for torrent, info in data.iteritems():
-            if torrent in self.config["torrent_blacklist"]:
-                log.debug('skipping {0}'.format(torrent))
-                continue
-            torrent = os.path.abspath(os.path.join(os.path.dirname(resume_data), torrent))
+        with log:
+            for torrent, info in data.iteritems():
+                if torrent in self.config["torrent_blacklist"]:
+                    log.debug('skipping {0}'.format(torrent))
+                    continue
+                torrent = os.path.abspath(os.path.join(os.path.dirname(resume_data),
+                                                       torrent))
 
-            try:
-                filedump = base64.encodestring(
-                    open(unicode(torrent, 'utf-8'), 'rb').read())
-            except IOError:
-                log.error('Could not open torrent {0}! skipping...'.format(torrent))
-                continue
+                try:
+                    filedump = base64.encodestring(
+                        open(unicode(torrent, 'utf-8'), 'rb').read())
+                except IOError:
+                    log.error('Could not open torrent {0}! skipping...'.format(torrent))
+                    continue
 
-            try:
-                ut_save_path = unicode(info['path'], 'utf-8')
-            except UnicodeDecodeError:
-                ut_save_path = unicode(info['path'], 'latin-1')
-            except TypeError:
-                pass
+                try:
+                    ut_save_path = unicode(info['path'], 'utf-8')
+                except UnicodeDecodeError:
+                    ut_save_path = unicode(info['path'], 'latin-1')
+                except TypeError:
+                    pass
 
-            torrent_root = os.path.basename(ut_save_path)
-            deluge_storage_path = os.path.dirname(ut_save_path)
+                torrent_root = os.path.basename(ut_save_path)
+                deluge_storage_path = os.path.dirname(ut_save_path)
 
-            if use_wine_mappings:
-                torrent_root = self.wine_path_check(torrent_root)
-                deluge_storage_path = self.wine_path_check(deluge_storage_path)
+                if use_wine_mappings:
+                    torrent_root = self.wine_path_check(torrent_root)
+                    deluge_storage_path = self.wine_path_check(deluge_storage_path)
 
-            log.info('Adding torrent {0} to deluge.'.format(torrent_root))
-            options = {'download_location': deluge_storage_path, 'add_paused': True}
-            torrent_id = component.get("Core").add_torrent_file(torrent_root,
-                                                                filedump=filedump,
-                                                                options=options)
+                log.info('Attempting to add torrent {0} to deluge.'.format(torrent_root))
+                options = {'download_location': deluge_storage_path, 'add_paused': True}
+                torrent_id = component.get("Core").add_torrent_file(torrent_root,
+                                                                    filedump=filedump,
+                                                                    options=options)
 
-            if torrent_id is None:
-                log.info('Torrent {0} was not added, may already exsist...'.format(
-                    torrent))
-            else:
-                self.resolve_path_renames(torrent_id, torrent_root,
-                                          force_recheck=recheck_all)
-                added.append(torrent_root)
+                if torrent_id is None:
+                    log.info('FAILED: Could not add, may already exsist...'.format(
+                        torrent))
+                else:
+                    log.info('SUCCESS!')
+                    self.resolve_path_renames(torrent_id, torrent_root,
+                                              force_recheck=recheck_all)
+                    added.append(torrent_root)
 
         return added, failed
 

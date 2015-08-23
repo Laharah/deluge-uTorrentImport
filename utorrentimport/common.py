@@ -38,6 +38,8 @@
 #
 
 from deluge.log import LOG as delugelog
+import deluge.component as component
+from events import uTorrentImportLoggingEvent
 
 def get_resource(filename):
     import pkg_resources, os
@@ -45,18 +47,42 @@ def get_resource(filename):
 
 class Log(object):
     """small wrapper class for formatting log outputs"""
+    def __init__(self):
+        self.transmitting = False
+        self.event_manager = component.get('EventManager')
+
+    def __enter__(self):
+        self.transmitting = True
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.transmitting = False
 
     def error(self, msg):
+        level = 'error'
         delugelog.error("[uTorrentImport] {0}".format(msg))
+        if self.transmitting:
+            self.event_manager.emit(uTorrentImportLoggingEvent(level, msg))
 
     def info(self, msg):
+        level = 'info'
         delugelog.info("[uTorrentImport] {0}".format(msg))
+        if self.transmitting:
+            self.event_manager.emit(uTorrentImportLoggingEvent(level, msg))
 
     def debug(self, msg):
+        level = 'debug'
         delugelog.debug("[uTorrentImport] {0}".format(msg))
+        if self.transmitting:
+            self.event_manager.emit(uTorrentImportLoggingEvent(level, msg))
 
     def critical(self, msg):
+        level = 'critical'
         delugelog.critical("[uTorrentImport] {0}".format(msg))
+        if self.transmitting:
+            self.event_manager.emit(uTorrentImportLoggingEvent(level, msg))
 
     def warning(self, msg):
+        level = 'warning'
         delugelog.warning("[uTorrentImport] {0}".format(msg))
+        if self.transmitting:
+            self.event_manager.emit(uTorrentImportLoggingEvent(level, msg))
