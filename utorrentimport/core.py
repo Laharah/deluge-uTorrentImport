@@ -49,6 +49,7 @@ from deluge.plugins.pluginbase import CorePluginBase
 import deluge.component as component
 import deluge.configmanager
 from deluge.core.rpcserver import export
+from twisted.internet import defer, reactor
 
 from common import Log
 
@@ -177,11 +178,17 @@ class Core(CorePluginBase):
             torrent.force_recheck()
             return
 
+    def take_breath(self):
+        d = defer.Deferred()
+        reactor.callLater(.1, d.callback, None)
+        return d
+
     #########
     #  Section: Public API
     #########
 
     @export
+    @defer.inlineCallbacks
     def begin_import(self,
                      resume_data=None,
                      use_wine_mappings=False,
@@ -191,14 +198,20 @@ class Core(CorePluginBase):
         attempts to add utorrent torrents to deluge
         resume_data: path to utorrent resume data
         """
+
         self.find_wine_drives()
         data = self.read_resume_data(resume_data)
         if not data:
-            return None
+            defer.returnValue(None)
         added = []
         failed = []
         with log:
+            counter = 0
             for torrent, info in data.iteritems():
+                counter += 1
+                if counter > 20:
+                    counter = 0
+                    yield self.take_breath()
                 if torrent in self.config["torrent_blacklist"]:
                     log.debug('skipping {0}'.format(torrent))
                     continue
@@ -257,7 +270,7 @@ class Core(CorePluginBase):
                     self.resolve_path_renames(torrent_id, torrent_root,
                                               force_recheck=force_recheck)
 
-        return added, failed
+        defer.returnValue((added, failed))
 
     @export
     def set_config(self, config):
