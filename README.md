@@ -16,4 +16,4 @@
 4. Turn on the plugin (tick the box)
 5. press the button!
 
-<iframe src="http://gfycat.com/ifr/LimpThreadbareAyeaye" frameborder="0" scrolling="no" width="598" height="536" style="-webkit-backface-visibility: hidden;-webkit-transform: scale(1);" ></iframe>
+![Screenshot](http://zippy.gfycat.com/LimpThreadbareAyeaye.gif)
