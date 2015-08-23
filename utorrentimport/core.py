@@ -58,7 +58,8 @@ DEFAULT_PREFS = {
     "torrent_blacklist": ['.fileguard', 'rec'],
     "wine_drives": {},
     "use_wine_mappings": False,
-    "skip_recheck": False,
+    "force_recheck": True,
+    "resume": False,
     "previous_resume_dat_path": ''
 }
 
@@ -140,7 +141,7 @@ class Core(CorePluginBase):
             log.debug('No WINE mapping for drive {0}'.format(drive.group(1)))
         return mapped
 
-    def resolve_path_renames(self, torrent_id, torrent_root, skip_recheck=False):
+    def resolve_path_renames(self, torrent_id, torrent_root, force_recheck=True):
         """
         resolves issues stemming from utorrent renames not encoded into the torrent
         torrent_id: torrent_id
@@ -154,6 +155,8 @@ class Core(CorePluginBase):
                 log.info(u'Renaming {0} => {1}'.format(main_folder,
                                                        torrent_root).encode('utf-8'))
                 torrent.rename_folder(main_folder, torrent_root)
+                torrent.force_recheck()
+                return
 
         else:
             main_file = files[0]['path']
@@ -161,8 +164,10 @@ class Core(CorePluginBase):
                 log.info(u'Renaming {0} => {1}'.format(main_file,
                                                        torrent_root).encode('utf-8'))
                 torrent.rename_files([(0, torrent_root)])
+                torrent.force_recheck()
+                return
 
-        if not skip_recheck:
+        if force_recheck:
             torrent.force_recheck()
             return
 
@@ -171,7 +176,11 @@ class Core(CorePluginBase):
     #########
 
     @export
-    def begin_import(self, resume_data=None, use_wine_mappings=False, skip_recheck=False):
+    def begin_import(self,
+                     resume_data=None,
+                     use_wine_mappings=False,
+                     force_recheck=True,
+                     resume=False):
         """
         attempts to add utorrent torrents to deluge
         resume_data: path to utorrent resume data
@@ -211,20 +220,23 @@ class Core(CorePluginBase):
                     torrent_root = self.wine_path_check(torrent_root)
                     deluge_storage_path = self.wine_path_check(deluge_storage_path)
 
-                log.info('Adding {0} to deluge.'.format(torrent_root))
-                options = {'download_location': deluge_storage_path, 'add_paused': True}
+                log.debug('Adding {0} to deluge.'.format(torrent_root))
+                options = {
+                    'download_location': deluge_storage_path,
+                    'add_paused': True if not resume else False
+                }
                 torrent_id = component.get("Core").add_torrent_file(torrent_root,
                                                                     filedump=filedump,
                                                                     options=options)
 
                 if torrent_id is None:
-                    log.info('FAILED: Could not add, may already exsist...'.format(
-                        torrent))
+                    log.info(u'FAILURE: "{0}" could not be added, may already '
+                             u'exsist...'.format(torrent_root))
                 else:
-                    log.info('SUCCESS!')
-                    self.resolve_path_renames(torrent_id, torrent_root,
-                                              skip_recheck=skip_recheck)
                     added.append(torrent_root)
+                    log.info(u'SUCCESS!: "{0}" added successfully'.format(torrent_root))
+                    self.resolve_path_renames(torrent_id, torrent_root,
+                                              force_recheck=force_recheck)
 
         return added, failed
 

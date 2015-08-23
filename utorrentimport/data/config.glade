@@ -42,6 +42,8 @@
               <widget class="GtkEntry" id="resume_dat_entry">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
+                <property name="tooltip" translatable="yes">Path where the uTorrent resume.dat file can be found.
+Should auto-populate for most setups.</property>
                 <property name="invisible_char">●</property>
                 <property name="primary_icon_activatable">False</property>
                 <property name="secondary_icon_activatable">False</property>
@@ -78,6 +80,8 @@
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">False</property>
+                    <property name="tooltip" translatable="yes">Enable WINE drive letter mapping when resolving torrent paths.
+If you're unsure, you most likley don't need it.</property>
                     <property name="draw_indicator">True</property>
                   </widget>
                   <packing>
@@ -87,17 +91,34 @@
                   </packing>
                 </child>
                 <child>
-                  <widget class="GtkCheckButton" id="skip_recheck">
-                    <property name="label" translatable="yes">Skip re-check</property>
+                  <widget class="GtkCheckButton" id="resume">
+                    <property name="label" translatable="yes">Resume After Adding</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">False</property>
+                    <property name="tooltip" translatable="yes">Resume Torrents after they are added to deluge.</property>
                     <property name="draw_indicator">True</property>
+                    <signal name="toggled" handler="on_resume_toggled" swapped="no"/>
                   </widget>
                   <packing>
                     <property name="expand">False</property>
                     <property name="fill">False</property>
                     <property name="position">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkCheckButton" id="force_recheck">
+                    <property name="label" translatable="yes">Force Recheck</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">False</property>
+                    <property name="tooltip" translatable="yes">Forces Recheck on all newly added torrents.</property>
+                    <property name="draw_indicator">True</property>
+                  </widget>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">False</property>
+                    <property name="position">2</property>
                   </packing>
                 </child>
                 <child>
@@ -119,7 +140,7 @@
                   <packing>
                     <property name="expand">True</property>
                     <property name="fill">True</property>
-                    <property name="position">2</property>
+                    <property name="position">3</property>
                   </packing>
                 </child>
               </widget>

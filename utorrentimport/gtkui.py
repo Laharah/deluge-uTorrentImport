@@ -58,15 +58,20 @@ class GtkUI(GtkPluginBase):
                                                      self.on_apply_prefs)
 
         component.get("PluginManager").register_hook("on_show_prefs", self.on_show_prefs)
-        signal_dictionary = {'on_import_button_clicked': self.on_import_button_clicked}
-
+        signal_dictionary = {
+            'on_import_button_clicked': self.on_import_button_clicked,
+            'on_resume_toggled': self.on_resume_toggled
+        }
+        log.debug('utorrentimport: signals hooked!')
         self.glade.signal_autoconnect(signal_dictionary)
         self.use_wine_mappings = self.glade.get_widget('use_wine_mappings')
-        self.skip_recheck = self.glade.get_widget('skip_recheck')
+        self.force_recheck = self.glade.get_widget('force_recheck')
+        self.resume = self.glade.get_widget('resume')
         self.resume_dat_entry = self.glade.get_widget('resume_dat_entry')
         self.log_view = self.glade.get_widget('log_view')
 
         client.register_event_handler('uTorrentImportLoggingEvent', self.log_to_user)
+
 
     def disable(self):
         component.get("Preferences").remove_page("uTorrentImport")
@@ -93,7 +98,8 @@ class GtkUI(GtkPluginBase):
         self.config = yield client.utorrentimport.get_config()
         log.debug('got config: {0}'.format(self.config))
         self.populate_config(self.config)
-        log.debug('utorrentimport: signals hooked!')
+        log.debug('config populated')
+        self.on_resume_toggled(_)  # Prevents invalid state
         if not self.config['previous_resume_dat_path']:
             default_resume = yield client.utorrentimport.get_default_resume_path()
             log.debug('utorrentimport: got resume.dat path!')
@@ -109,9 +115,20 @@ class GtkUI(GtkPluginBase):
         result = yield client.utorrentimport.begin_import(
             settings['previous_resume_dat_path'],
             use_wine_mappings=settings['use_wine_mappings'],
-            skip_recheck=settings['skip_recheck'])
+            force_recheck=settings['force_recheck'],
+            resume=settings['resume'])
         log.debug('recieved result! {0}'.format(result))
         self.toggle_button(button)
+
+    def on_resume_toggled(self, _):
+        if not self.resume.get_active():
+            self._previous_force_recheck = self.force_recheck.get_active()
+            self.force_recheck.set_sensitive(False)
+            self.force_recheck.set_active(True)
+        else:
+            self.force_recheck.set_active(self._previous_force_recheck)
+            self.force_recheck.set_sensitive(True)
+
 
     def toggle_button(self, button):
         if button.get_sensitive():
@@ -122,12 +139,15 @@ class GtkUI(GtkPluginBase):
     def populate_config(self, config):
         """callback for on show_prefs"""
         self.use_wine_mappings.set_active(config['use_wine_mappings'])
-        self.skip_recheck.set_active(config['skip_recheck'])
+        self.force_recheck.set_active(config['force_recheck'])
+        self._previous_force_recheck = config['force_recheck']
+        self.resume.set_active(config['resume'])
         self.resume_dat_entry.set_text(config['previous_resume_dat_path'])
 
     def gather_settings(self):
         return {
             'use_wine_mappings': self.use_wine_mappings.get_active(),
-            'skip_recheck': self.skip_recheck.get_active(),
+            'force_recheck': self.force_recheck.get_active(),
+            'resume': self.resume.get_active(),
             'previous_resume_dat_path': self.resume_dat_entry.get_text()
         }
