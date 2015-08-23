@@ -63,30 +63,30 @@ class Log(object):
 
     def error(self, msg):
         level = 'error'
-        delugelog.error("[uTorrentImport] {0}".format(msg))
+        delugelog.error(u"[uTorrentImport] {0}".format(msg))
         if self.transmitting:
             self.event_manager.emit(uTorrentImportLoggingEvent(level, msg))
 
     def info(self, msg):
         level = 'info'
-        delugelog.info("[uTorrentImport] {0}".format(msg))
+        delugelog.info(u"[uTorrentImport] {0}".format(msg))
         if self.transmitting:
             self.event_manager.emit(uTorrentImportLoggingEvent(level, msg))
 
     def debug(self, msg):
         level = 'debug'
-        delugelog.debug("[uTorrentImport] {0}".format(msg))
+        delugelog.debug(u"[uTorrentImport] {0}".format(msg))
         if self.transmitting:
             self.event_manager.emit(uTorrentImportLoggingEvent(level, msg))
 
     def critical(self, msg):
         level = 'critical'
-        delugelog.critical("[uTorrentImport] {0}".format(msg))
+        delugelog.critical(u"[uTorrentImport] {0}".format(msg))
         if self.transmitting:
             self.event_manager.emit(uTorrentImportLoggingEvent(level, msg))
 
     def warning(self, msg):
         level = 'warning'
-        delugelog.warning("[uTorrentImport] {0}".format(msg))
+        delugelog.warning(u"[uTorrentImport] {0}".format(msg))
         if self.transmitting:
             self.event_manager.emit(uTorrentImportLoggingEvent(level, msg))

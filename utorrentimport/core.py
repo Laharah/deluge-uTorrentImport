@@ -152,8 +152,11 @@ class Core(CorePluginBase):
         if len(files) > 1:
             main_folder = files[0]['path'].split('/')[0]
             if main_folder != torrent_root:
-                log.info(u'Renaming {0} => {1}'.format(main_folder,
-                                                       torrent_root).encode('utf-8'))
+                try:
+                    log.info(u'Renaming {0} => {1}'.format(main_folder,
+                                                           torrent_root).encode('utf-8'))
+                except UnicodeDecodeError:
+                    pass
                 torrent.rename_folder(main_folder, torrent_root)
                 torrent.force_recheck()
                 return
@@ -161,8 +164,11 @@ class Core(CorePluginBase):
         else:
             main_file = files[0]['path']
             if main_file != torrent_root:
-                log.info(u'Renaming {0} => {1}'.format(main_file,
-                                                       torrent_root).encode('utf-8'))
+                try:
+                    log.info(u'Renaming {0} => {1}'.format(main_file,
+                                                           torrent_root).encode('utf-8'))
+                except UnicodeDecodeError:
+                    pass
                 torrent.rename_files([(0, torrent_root)])
                 torrent.force_recheck()
                 return
@@ -204,6 +210,7 @@ class Core(CorePluginBase):
                         open(unicode(torrent, 'utf-8'), 'rb').read())
                 except IOError:
                     log.error('Could not open torrent {0}! skipping...'.format(torrent))
+                    failed.append(torrent)
                     continue
 
                 try:
@@ -220,7 +227,12 @@ class Core(CorePluginBase):
                     torrent_root = self.wine_path_check(torrent_root)
                     deluge_storage_path = self.wine_path_check(deluge_storage_path)
 
-                log.debug('Adding {0} to deluge.'.format(torrent_root))
+                try:
+                    log.debug(u'Adding {0} to deluge.'.format(torrent_root))
+                except UnicodeDecodeError:
+                    log.error('Bad Filename, skipping')
+                    failed.append(torrent)
+                    continue
                 options = {
                     'download_location': deluge_storage_path,
                     'add_paused': True if not resume else False
@@ -230,11 +242,18 @@ class Core(CorePluginBase):
                                                                     options=options)
 
                 if torrent_id is None:
-                    log.info(u'FAILURE: "{0}" could not be added, may already '
-                             u'exsist...'.format(torrent_root))
+                    try:
+                        log.info(u'FAILURE: "{0}" could not be added, may already '
+                                 u'exsist...'.format(torrent_root))
+                    except UnicodeDecodeError:
+                        log.error(u'FAILURE: Torrent Unicode Error')
+
                 else:
                     added.append(torrent_root)
-                    log.info(u'SUCCESS!: "{0}" added successfully'.format(torrent_root))
+                    try:
+                        log.info(u'SUCCESS!: "{0}" added successfully'.format(torrent_root))
+                    except UnicodeDecodeError:
+                        log.info(u'SUCCESS: added but with UnicodeError')
                     self.resolve_path_renames(torrent_id, torrent_root,
                                               force_recheck=force_recheck)
 
