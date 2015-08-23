@@ -58,7 +58,7 @@ class GtkUI(GtkPluginBase):
 
         self.glade.signal_autoconnect(signal_dictionary)
         self.use_wine_mappings = self.glade.get_widget('use_wine_mappings')
-        self.recheck_all = self.glade.get_widget('recheck_all')
+        self.skip_recheck = self.glade.get_widget('skip_recheck')
         self.resume_dat_entry = self.glade.get_widget('resume_dat_entry')
         self.log_view = self.glade.get_widget('log_view')
 
@@ -103,7 +103,7 @@ class GtkUI(GtkPluginBase):
         result = yield client.utorrentimport.begin_import(
             settings['previous_resume_dat_path'],
             use_wine_mappings=settings['use_wine_mappings'],
-            recheck_all=settings['recheck_all'])
+            skip_recheck=settings['skip_recheck'])
         log.debug('recieved result! {0}'.format(result))
         self.toggle_button(button)
 
@@ -116,12 +116,12 @@ class GtkUI(GtkPluginBase):
     def populate_config(self, config):
         """callback for on show_prefs"""
         self.use_wine_mappings.set_active(config['use_wine_mappings'])
-        self.recheck_all.set_active(config['recheck_all'])
+        self.skip_recheck.set_active(config['skip_recheck'])
         self.resume_dat_entry.set_text(config['previous_resume_dat_path'])
 
     def gather_settings(self):
         return {
             'use_wine_mappings': self.use_wine_mappings.get_active(),
-            'recheck_all': self.recheck_all.get_active(),
+            'skip_recheck': self.skip_recheck.get_active(),
             'previous_resume_dat_path': self.resume_dat_entry.get_text()
         }

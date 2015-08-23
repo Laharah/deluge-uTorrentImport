@@ -58,7 +58,7 @@ DEFAULT_PREFS = {
     "torrent_blacklist": ['.fileguard', 'rec'],
     "wine_drives": {},
     "use_wine_mappings": False,
-    "recheck_all": False,
+    "skip_recheck": False,
     "previous_resume_dat_path": ''
 }
 
@@ -140,7 +140,7 @@ class Core(CorePluginBase):
             log.debug('No WINE mapping for drive {0}'.format(drive.group(1)))
         return mapped
 
-    def resolve_path_renames(self, torrent_id, torrent_root, force_recheck=False):
+    def resolve_path_renames(self, torrent_id, torrent_root, skip_recheck=False):
         """
         resolves issues stemming from utorrent renames not encoded into the torrent
         torrent_id: torrent_id
@@ -154,8 +154,6 @@ class Core(CorePluginBase):
                 log.info(u'Renaming {0} => {1}'.format(main_folder,
                                                        torrent_root).encode('utf-8'))
                 torrent.rename_folder(main_folder, torrent_root)
-                torrent.force_recheck()
-                return
 
         else:
             main_file = files[0]['path']
@@ -163,10 +161,8 @@ class Core(CorePluginBase):
                 log.info(u'Renaming {0} => {1}'.format(main_file,
                                                        torrent_root).encode('utf-8'))
                 torrent.rename_files([(0, torrent_root)])
-                torrent.force_recheck()
-                return
 
-        if force_recheck:
+        if not skip_recheck:
             torrent.force_recheck()
             return
 
@@ -175,7 +171,7 @@ class Core(CorePluginBase):
     #########
 
     @export
-    def begin_import(self, resume_data=None, use_wine_mappings=False, recheck_all=False):
+    def begin_import(self, resume_data=None, use_wine_mappings=False, skip_recheck=False):
         """
         attempts to add utorrent torrents to deluge
         resume_data: path to utorrent resume data
@@ -227,7 +223,7 @@ class Core(CorePluginBase):
                 else:
                     log.info('SUCCESS!')
                     self.resolve_path_renames(torrent_id, torrent_root,
-                                              force_recheck=recheck_all)
+                                              skip_recheck=skip_recheck)
                     added.append(torrent_root)
 
         return added, failed

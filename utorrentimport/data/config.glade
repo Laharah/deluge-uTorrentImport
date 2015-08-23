@@ -87,8 +87,8 @@
                   </packing>
                 </child>
                 <child>
-                  <widget class="GtkCheckButton" id="recheck_all">
-                    <property name="label" translatable="yes">Force re-check on all added torrents</property>
+                  <widget class="GtkCheckButton" id="skip_recheck">
+                    <property name="label" translatable="yes">Skip re-check</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">False</property>
