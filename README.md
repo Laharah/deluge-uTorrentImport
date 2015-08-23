@@ -1,13 +1,13 @@
 # uTorrentImport
 ### a cross platform Deluge plugin to import torrents from uTorrent
 
+*Download [HERE](https://github.com/Laharah/deluge-uTorrentImport/tree/master/dist)*
 
 * supports WINE mappings
 * automatically searches for relevent uTorrent sessions
 * Supports renamed and relocated torrents
 * **ONE BUTTON. NO COMMAND LINE NEEDED!**
 
-*Download the Plugin [HERE](https://github.com/Laharah/deluge-uTorrentImport/tree/master/dist)*
 
 #### Installation and use:
 
