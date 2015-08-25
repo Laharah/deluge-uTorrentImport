@@ -201,24 +201,11 @@ class Core(CorePluginBase):
 
         if deferred_list:
             deferred_list = defer.DeferredList(deferred_list)
-            deferred_list.addCallback(lambda x: self.ll_recheck(torrent))
+            deferred_list.addCallback(lambda x: torrent.force_recheck())
 
         if force_recheck and not recheck_required:
-            self.ll_recheck(torrent)
+            torrent.force_recheck()
             return
-
-    @staticmethod
-    def ll_recheck(torrent):
-        """A lower level recheck"""
-        paused = torrent.handle.is_paused()
-        try:
-            torrent.handle.force_recheck()
-        except Exception, e:
-            log.debug("Unable to force recheck: %s", e)
-            return False
-        torrent.forcing_recheck = True
-        torrent.forcing_recheck_paused = paused
-        return True
 
     def take_breath(self):
         d = defer.Deferred()
