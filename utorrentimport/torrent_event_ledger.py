@@ -10,6 +10,20 @@ from twisted.internet import defer, reactor
 import deluge.component as component
 
 
+class Error(Exception):
+    """"base exception"""
+    pass
+
+
+class TorrentEventLedgerNotListening(Error):
+    """raised when no events are listening"""
+
+    def __init__(self, message=None):
+        if not message:
+            message = "The ledger is not currently listening for any events"
+        super(self.__class__, self).__init__()
+
+
 class TorrentEventLedger(object):
     """
     keeps track of specific torrent events the plugin is waiting on.
@@ -119,12 +133,16 @@ class TorrentEventLedger(object):
 
     def watch_for_file_rename(self, torrent_id, index=None, new_name=None):
         """get a deferred for a specific torrent file rename"""
+        if not self.registered_events:
+            raise TorrentEventLedgerNotListening()
         d = defer.Deferred()
         self.ledgers['TorrentFileRenamedEvent'][torrent_id][(index, new_name)] = d
         return d
 
     def watch_for_folder_rename(self, torrent_id, old=None, new=None):
         """get a deferred for a specific torrent folder rename"""
+        if not self.registered_events:
+            raise TorrentEventLedgerNotListening()
         d = defer.Deferred()
         self.ledgers['TorrentFolderRenamedEvent'][torrent_id][(old, new)] = d
         return d
