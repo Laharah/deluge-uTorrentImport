@@ -19,3 +19,9 @@
 5. press the button!
 
 ![Screenshot](http://zippy.gfycat.com/LimpThreadbareAyeaye.gif)
+
+### Changelog:
+#### v2.1.0:
+* Fixed some renamed torrents not rechecking properly
+* added support for correctly redirecting individual files relocated by uTorrent
+* Lowered chance of torrents beginning to download when adding large amounts of torrents at once. (adding may take more time now)
