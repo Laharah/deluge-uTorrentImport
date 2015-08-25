@@ -3,11 +3,13 @@ A Class for getting deferrds to specific torrent events
 """
 __author__ = 'Laharah'
 
-from collections import namedtuple
 import time
 
 from twisted.internet import defer, reactor
 import deluge.component as component
+from common import Log
+
+log = Log()
 
 
 class Error(Exception):
@@ -21,7 +23,7 @@ class TorrentEventLedgerNotListening(Error):
     def __init__(self, message=None):
         if not message:
             message = "The ledger is not currently listening for any events"
-        super(self.__class__, self).__init__()
+        super(self.__class__, self).__init__(message)
 
 
 class TorrentEventLedger(object):
@@ -33,9 +35,6 @@ class TorrentEventLedger(object):
 
     Contains a context manager to register and deregister its handlers
     """
-
-    FolderRenameLedgerEntry = namedtuple('FolderRenameLedgerEntry', 'deferred, old, new')
-    FileRenameLedgerEntry = namedtuple('FileRenameLedgerEntry', 'deferred, index, name')
 
     def __init__(self, timeout=None):
         """If timeout is given, it is used as the ammount of time before forcing
@@ -57,7 +56,7 @@ class TorrentEventLedger(object):
 
     def _force_deregister(self, events):
         """forces de-register of give (event, cb) pairs"""
-        for event, cb in self.context_events:
+        for event, cb in events:
             self.event_manager.deregister_event_handler(event, cb)
             del self.ledgers[event]
             return
@@ -77,33 +76,38 @@ class TorrentEventLedger(object):
         for event, cb in events:
             self.event_manager.register_event_handler(event, cb)
             self.registered_events.add((event, cb))
+            self.ledgers[event] = {}
         self.context_events = events
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """deregisters the context manager listeners"""
         if not self.timeout_start:
             self.timeout_start = time.time()
-
         ledgers = {}
         for event, _ in self.context_events:
             ledgers[event] = self.ledgers[event]
-        for ledger in ledgers:
+        for ledger, entries in ledgers.iteritems():
             if self.timeout:
                 if time.time() - self.timeout_start > self.timeout:
+                    log.debug('timeout reached, turning off listners')
                     self._force_deregister(self.context_events)
+                    return
 
-            if ledger:
+            if entries:
+                log.debug(
+                    'TorrentEventLedger is still waiting on events: {0}, waiting...'.format(
+                        self.ledgers))
                 reactor.callLater(1, self.__exit__, None, None, None)
                 return
 
         self._force_deregister(self.context_events)
-        self.context_events = []
+        self.context_events = set()
 
     def _on_folder_renamed(self, torrent_id, old, new):
         """
         default callback for the TorrentFolderRenamedEvent
         """
-        valid_tuples = {(old, new), (old, None), (None, None)}
+        valid_tuples = [(old, new), (old, None), (None, None)]
         self._fire_deferreds('TorrentFolderRenamedEvent', torrent_id, valid_tuples)
 
     def _on_file_renamed(self, torrent_id, index, new_name):
@@ -123,26 +127,37 @@ class TorrentEventLedger(object):
 
         for t in valid_tuples:
             try:
-                entry[t].callback()
+                entry[t].callback(None)
                 del entry[t]
             except KeyError:
                 pass
 
-        if not self.ledgers['TorrentFileRenamedEvent'][torrent_id]:
-            del self.ledgers['TorrentFileRenamedEvent'][torrent_id]
+        if not entry:
+            del self.ledgers[event][torrent_id]
 
     def watch_for_file_rename(self, torrent_id, index=None, new_name=None):
         """get a deferred for a specific torrent file rename"""
         if not self.registered_events:
             raise TorrentEventLedgerNotListening()
         d = defer.Deferred()
-        self.ledgers['TorrentFileRenamedEvent'][torrent_id][(index, new_name)] = d
+        try:
+            self.ledgers['TorrentFileRenamedEvent'][torrent_id][(index, new_name)] = d
+        except KeyError:
+            self.ledgers['TorrentFileRenamedEvent'][torrent_id] = {(index, new_name): d}
         return d
 
     def watch_for_folder_rename(self, torrent_id, old=None, new=None):
         """get a deferred for a specific torrent folder rename"""
         if not self.registered_events:
             raise TorrentEventLedgerNotListening()
+
+        for arg in (old, new):
+            if arg:
+                if not arg.endswith('/'):
+                    arg = arg + '/'
         d = defer.Deferred()
-        self.ledgers['TorrentFolderRenamedEvent'][torrent_id][(old, new)] = d
+        try:
+            self.ledgers['TorrentFolderRenamedEvent'][torrent_id][(old, new)] = d
+        except KeyError:
+            self.ledgers['TorrentFolderRenamedEvent'][torrent_id] = {(old, new): d}
         return d
