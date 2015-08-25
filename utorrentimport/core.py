@@ -209,7 +209,7 @@ class Core(CorePluginBase):
 
     def take_breath(self):
         d = defer.Deferred()
-        reactor.callLater(.1, d.callback, None)
+        reactor.callLater(.5, d.callback, None)
         return d
 
     #########
@@ -246,7 +246,7 @@ class Core(CorePluginBase):
                         log.debug('skipping {0}'.format(torrent))
                         continue
                     counter += 1
-                    if counter > 20:
+                    if counter > 10:
                         yield self.take_breath()
                         counter = 0
                     torrent = os.path.abspath(os.path.join(os.path.dirname(resume_data),
