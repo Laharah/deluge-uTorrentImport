@@ -139,6 +139,9 @@ class TorrentEventLedger(object):
         """get a deferred for a specific torrent file rename"""
         if not self.registered_events:
             raise TorrentEventLedgerNotListening()
+
+        if new_name:
+            new_name = new_name.replace(u'\\', u'/')
         d = defer.Deferred()
         try:
             self.ledgers['TorrentFileRenamedEvent'][torrent_id][(index, new_name)] = d
