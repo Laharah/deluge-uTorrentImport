@@ -25,3 +25,6 @@
 * Fixed some renamed torrents not rechecking properly
 * added support for correctly redirecting individual files relocated by uTorrent
 * Lowered chance of torrents beginning to download when adding large amounts of torrents at once. (adding may take more time now)
+
+#### v2.0.2:
+* Fixed torrent file unicode errors halting import
