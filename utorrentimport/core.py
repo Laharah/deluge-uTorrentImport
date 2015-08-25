@@ -52,6 +52,7 @@ from deluge.core.rpcserver import export
 from twisted.internet import defer, reactor
 
 from common import Log
+import torrent_event_ledger
 
 log = Log()
 
@@ -70,6 +71,7 @@ class Core(CorePluginBase):
         self.config = deluge.configmanager.ConfigManager("utorrentimport.conf",
                                                          DEFAULT_PREFS)
         self.torrent_manager = component.get("TorrentManager")
+        self.event_ledger = torrent_event_ledger.TorrentEventLedger()
 
     def disable(self):
         pass
@@ -142,25 +144,45 @@ class Core(CorePluginBase):
             log.debug('No WINE mapping for drive {0}'.format(drive.group(1)))
         return mapped
 
-    def resolve_path_renames(self, torrent_id, torrent_root, force_recheck=True):
+    def resolve_path_renames(self, torrent_id, torrent_root,
+                             force_recheck=True,
+                             targets=None):
         """
         resolves issues stemming from utorrent renames not encoded into the torrent
         torrent_id: torrent_id
         torrent_root: what the torrent root should be (according to utorrent)
+        force_recheck; recheck the torrent regardless of any changes
+        targets: list of target changes from a utorrent resume.dat
         """
         torrent = self.torrent_manager[torrent_id]
         files = torrent.get_files()
+        recheck_required = False
+        deferred_list = []
         if len(files) > 1:
-            main_folder = files[0]['path'].split('/')[0]
+            main_folder = files[0]['path'].split('/')[0] + '/'
             if main_folder != torrent_root:
                 try:
                     log.info(u'Renaming {0} => {1}'.format(main_folder,
                                                            torrent_root).encode('utf-8'))
                 except UnicodeDecodeError:
                     pass
+                d = self.event_ledger.watch_for_folder_rename(torrent_id, main_folder,
+                                                              torrent_root + '/')
                 torrent.rename_folder(main_folder, torrent_root)
-                torrent.force_recheck()
-                return
+                deferred_list.append(d)
+                recheck_required = True
+
+            if targets:
+                renames = []
+                for index, new_path in targets:
+                    new_path = os.path.join(torrent_root, new_path)
+                    deferred_list.append(self.event_ledger.watch_for_file_rename(
+                        torrent_id,
+                        index=index,
+                        new_name=new_path))
+                    renames.append((index, new_path))
+                torrent.rename_files(renames)
+                recheck_required = True
 
         else:
             main_file = files[0]['path']
@@ -170,11 +192,19 @@ class Core(CorePluginBase):
                                                            torrent_root).encode('utf-8'))
                 except UnicodeDecodeError:
                     pass
+                d = self.event_ledger.watch_for_file_rename(torrent_id,
+                                                            index=0,
+                                                            new_name=torrent_root)
                 torrent.rename_files([(0, torrent_root)])
-                torrent.force_recheck()
-                return
+                deferred_list.append(d)
+                recheck_required = True
 
-        if force_recheck:
+
+        if deferred_list:
+            deferred_list = defer.DeferredList(deferred_list)
+            deferred_list.addCallback(lambda x: torrent.force_recheck())
+
+        if force_recheck and not recheck_required:
             torrent.force_recheck()
             return
 
@@ -205,7 +235,7 @@ class Core(CorePluginBase):
             defer.returnValue(None)
         added = []
         failed = []
-        with log:
+        with log, self.event_ledger:
             counter = 0
             for torrent, info in data.iteritems():
                 counter += 1
@@ -264,11 +294,17 @@ class Core(CorePluginBase):
                 else:
                     added.append(torrent_root)
                     try:
-                        log.info(u'SUCCESS!: "{0}" added successfully'.format(torrent_root))
+                        log.info(
+                            u'SUCCESS!: "{0}" added successfully'.format(torrent_root))
                     except UnicodeDecodeError:
                         log.info(u'SUCCESS: added but with UnicodeError')
+                    try:
+                        targets = info['targets']
+                    except KeyError:
+                        targets = None
                     self.resolve_path_renames(torrent_id, torrent_root,
-                                              force_recheck=force_recheck)
+                                              force_recheck=force_recheck,
+                                              targets=targets)
 
         defer.returnValue((added, failed))
 
