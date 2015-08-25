@@ -275,12 +275,12 @@ class Core(CorePluginBase):
             log.error(u'Could not open torrent {0}! skipping...'.format(torrent))
             return False, torrent
 
-        # try:
-        ut_save_path = unicode(info['path'], 'utf-8')
-        # except UnicodeDecodeError:
-        #     ut_save_path = unicode(info['path'], 'latin-1')
-        # except TypeError:
-        #     pass
+        try:
+            ut_save_path = unicode(info['path'], 'utf-8')
+        except UnicodeDecodeError:
+            ut_save_path = unicode(info['path'], 'latin-1')
+        except TypeError:
+            pass
 
 
         torrent_root = os.path.basename(ut_save_path)
