@@ -114,7 +114,7 @@ class TorrentEventLedger(object):
         """
         default callback for the TorrentFileRenamedEvent
         """
-        valid_tuples = {(index, new_name), (index, None), (None, None)}
+        valid_tuples = [(index, new_name), (index, None), (None, None)]
 
         self._fire_deferreds('TorrentFileRenamedEvent', torrent_id, valid_tuples)
 

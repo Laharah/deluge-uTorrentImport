@@ -42,7 +42,6 @@ import re
 import base64
 from getpass import getuser
 
-from deluge.ui.common import TorrentInfo
 from deluge.bencode import bdecode
 from deluge.log import LOG as log
 from deluge.plugins.pluginbase import CorePluginBase
@@ -71,7 +70,7 @@ class Core(CorePluginBase):
         self.config = deluge.configmanager.ConfigManager("utorrentimport.conf",
                                                          DEFAULT_PREFS)
         self.torrent_manager = component.get("TorrentManager")
-        self.event_ledger = torrent_event_ledger.TorrentEventLedger()
+        self.event_ledger = torrent_event_ledger.TorrentEventLedger(timeout=60)
 
     def disable(self):
         pass
@@ -230,83 +229,103 @@ class Core(CorePluginBase):
         """
 
         self.find_wine_drives()
+        if not resume_data:
+            resume_data = self.get_default_resume_path()
         data = self.read_resume_data(resume_data)
+        if not data:
+            defer.returnValue(None)
         if not data:
             defer.returnValue(None)
         added = []
         failed = []
-        with log, self.event_ledger:
-            counter = 0
-            for torrent, info in data.iteritems():
-                counter += 1
-                if counter > 20:
-                    counter = 0
-                    yield self.take_breath()
-                if torrent in self.config["torrent_blacklist"]:
-                    log.debug('skipping {0}'.format(torrent))
-                    continue
-                torrent = os.path.abspath(os.path.join(os.path.dirname(resume_data),
-                                                       torrent))
-
-                try:
-                    filedump = base64.encodestring(
-                        open(unicode(torrent, 'utf-8'), 'rb').read())
-                except IOError:
-                    log.error('Could not open torrent {0}! skipping...'.format(torrent))
-                    failed.append(torrent)
-                    continue
-
-                try:
-                    ut_save_path = unicode(info['path'], 'utf-8')
-                except UnicodeDecodeError:
-                    ut_save_path = unicode(info['path'], 'latin-1')
-                except TypeError:
-                    pass
-
-                torrent_root = os.path.basename(ut_save_path)
-                deluge_storage_path = os.path.dirname(ut_save_path)
-
-                if use_wine_mappings:
-                    torrent_root = self.wine_path_check(torrent_root)
-                    deluge_storage_path = self.wine_path_check(deluge_storage_path)
-
-                try:
-                    log.debug(u'Adding {0} to deluge.'.format(torrent_root))
-                except UnicodeDecodeError:
-                    log.error('Bad Filename, skipping')
-                    failed.append(torrent)
-                    continue
-                options = {
-                    'download_location': deluge_storage_path,
-                    'add_paused': True if not resume else False
-                }
-                torrent_id = component.get("Core").add_torrent_file(torrent_root,
-                                                                    filedump=filedump,
-                                                                    options=options)
-
-                if torrent_id is None:
-                    try:
-                        log.info(u'FAILURE: "{0}" could not be added, may already '
-                                 u'exsist...'.format(torrent_root))
-                    except UnicodeDecodeError:
-                        log.error(u'FAILURE: Torrent Unicode Error')
-
-                else:
-                    added.append(torrent_root)
-                    try:
-                        log.info(
-                            u'SUCCESS!: "{0}" added successfully'.format(torrent_root))
-                    except UnicodeDecodeError:
-                        log.info(u'SUCCESS: added but with UnicodeError')
-                    try:
-                        targets = info['targets']
-                    except KeyError:
-                        targets = None
-                    self.resolve_path_renames(torrent_id, torrent_root,
-                                              force_recheck=force_recheck,
-                                              targets=targets)
+        with self.event_ledger:
+            with log:
+                counter = 0
+                for torrent, info in data.iteritems():
+                    if torrent in self.config["torrent_blacklist"]:
+                        log.debug('skipping {0}'.format(torrent))
+                        continue
+                    counter += 1
+                    if counter > 20:
+                        yield self.take_breath()
+                        counter = 0
+                    torrent = os.path.abspath(os.path.join(os.path.dirname(resume_data),
+                                                           torrent))
+                    success, name = self._import_torrent(torrent, info,
+                                                        use_wine_mappings,
+                                                        force_recheck, resume)
+                    if success:
+                        added.append(name)
+                    else:
+                        if not name:
+                            log.debug('blacklisted torrent, skipping')
+                        else:
+                            failed.append(name)
 
         defer.returnValue((added, failed))
+
+    def _import_torrent(self, torrent, info, use_wine_mappings=False,
+                       force_recheck=True,
+                       resume=False):
+
+        try:
+            filedump = base64.encodestring(
+                open(unicode(torrent, 'utf-8'), 'rb').read())
+        except IOError:
+            log.error(u'Could not open torrent {0}! skipping...'.format(torrent))
+            return False, torrent
+
+        # try:
+        ut_save_path = unicode(info['path'], 'utf-8')
+        # except UnicodeDecodeError:
+        #     ut_save_path = unicode(info['path'], 'latin-1')
+        # except TypeError:
+        #     pass
+
+
+        torrent_root = os.path.basename(ut_save_path)
+        deluge_storage_path = os.path.dirname(ut_save_path)
+
+        if use_wine_mappings:
+            torrent_root = self.wine_path_check(torrent_root)
+            deluge_storage_path = self.wine_path_check(deluge_storage_path)
+
+        try:
+            log.debug(u'Adding {0} to deluge.'.format(torrent_root))
+        except UnicodeDecodeError:
+            log.error('Bad Filename, skipping')
+            return False, torrent_root
+        options = {
+            'download_location': deluge_storage_path,
+            'add_paused': True if not resume else False
+        }
+        torrent_id = component.get("Core").add_torrent_file(torrent_root,
+                                                            filedump=filedump,
+                                                            options=options)
+
+        if torrent_id is None:
+            try:
+                log.info(u'FAILURE: "{0}" could not be added, may already '
+                         u'exsist...'.format(torrent_root))
+            except UnicodeDecodeError:
+                log.error(u'FAILURE: Torrent Unicode Error')
+
+            return False, torrent_root
+
+        else:
+            try:
+                log.info(
+                    u'SUCCESS!: "{0}" added successfully'.format(torrent_root))
+            except UnicodeDecodeError:
+                log.info(u'SUCCESS: added but with UnicodeError')
+            try:
+                targets = info['targets']
+            except KeyError:
+                targets = None
+            self.resolve_path_renames(torrent_id, torrent_root,
+                                      force_recheck=force_recheck,
+                                      targets=targets)
+            return True, torrent_root
 
     @export
     def set_config(self, config):
