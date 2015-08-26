@@ -46,6 +46,8 @@ from deluge.plugins.pluginbase import GtkPluginBase
 import deluge.component as component
 from common import get_resource
 
+import dialogs
+
 
 class GtkUI(GtkPluginBase):
     def enable(self):
@@ -123,12 +125,16 @@ class GtkUI(GtkPluginBase):
     def show_result(self, results):
         successes, failures = results
         title = u'uTorrentImport Finished'
-        dialog = gtk.Dialog(title, None, True, (gtk.STOCK_OK, gtk.RESPONSE_OK))
-        message = u'''uTorrentImport has finished importing torrents from uTorrent.\n
-        {0} torrents have been added to deluge.\n
-        {1} torrents were skipped.\n
-        You may wish to restart the deluge UI to update the status
-        of the added torrents.'''.format(len(successes), len(failures))
+        dialog = dialogs.AsyncDialog(title, None, True, (gtk.STOCK_OK, gtk.RESPONSE_OK),
+                                     destroy_signals=gtk.RESPONSE_OK)
+        message = u'''
+        uTorrentImport has finished importing torrents from uTorrent.
+
+            {0} torrents have been added to deluge.
+            {1} torrents were skipped.
+
+        You may wish to restart the deluge UI to update the status of the added torrents.
+        '''.format(len(successes), len(failures))
 
         label = gtk.Label(message)
         dialog.get_content_area().add(label)
@@ -136,8 +142,6 @@ class GtkUI(GtkPluginBase):
         dialog.set_gravity(gtk.gdk.GRAVITY_CENTER)
         dialog.show_all()
         dialog.run()
-        dialog.destroy()
-
 
     def on_resume_toggled(self, _):
         if not self.resume.get_active():
