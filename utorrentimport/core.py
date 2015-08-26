@@ -157,7 +157,7 @@ class Core(CorePluginBase):
         files = torrent.get_files()
         recheck_required = False
         deferred_list = []
-        if len(files) > 1:
+        if '/' in files[0]['path']:
             main_folder = files[0]['path'].split('/')[0] + '/'
             if main_folder != torrent_root + '/':
                 try:
