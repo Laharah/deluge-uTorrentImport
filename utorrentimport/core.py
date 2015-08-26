@@ -233,9 +233,7 @@ class Core(CorePluginBase):
             resume_data = self.get_default_resume_path()
         data = self.read_resume_data(resume_data)
         if not data:
-            defer.returnValue(None)
-        if not data:
-            defer.returnValue(None)
+            defer.returnValue((None, None))
         added = []
         failed = []
         with self.event_ledger:
@@ -269,8 +267,8 @@ class Core(CorePluginBase):
                        resume=False):
 
         try:
-            filedump = base64.encodestring(
-                open(unicode(torrent, 'utf-8'), 'rb').read())
+            with open(unicode(torrent, 'utf-8'), 'rb') as f:
+                filedump = base64.encodestring(f.read())
         except IOError:
             log.error(u'Could not open torrent {0}! skipping...'.format(torrent))
             return False, torrent
