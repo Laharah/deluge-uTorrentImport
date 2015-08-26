@@ -1,34 +1,54 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <glade-interface>
   <!-- interface-requires gtk+ 2.6 -->
   <!-- interface-naming-policy toplevel-contextual -->
   <widget class="GtkWindow" id="window1">
+    <property name="can_focus">False</property>
     <child>
       <widget class="GtkVBox" id="prefs_box">
         <property name="visible">True</property>
-        <property name="orientation">vertical</property>
+        <property name="can_focus">False</property>
         <child>
           <widget class="GtkLabel" id="header">
             <property name="visible">True</property>
-            <property name="label" translatable="yes">***Please Ensure uTorrent Is Not Running!***</property>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes">&lt;b&gt;***Please Ensure uTorrent Is Not Running!***&lt;/b&gt;</property>
+            <property name="use_markup">True</property>
           </widget>
           <packing>
             <property name="expand">False</property>
+            <property name="fill">True</property>
             <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <widget class="GtkLabel" id="responsiveness_warning">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes">&lt;i&gt;Note: Deluge may be unresponsive while adding a large number of torrents.&lt;/i&gt;</property>
+            <property name="use_markup">True</property>
+          </widget>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
+            <property name="position">1</property>
           </packing>
         </child>
         <child>
           <widget class="GtkHBox" id="hbox1">
             <property name="visible">True</property>
+            <property name="can_focus">False</property>
             <child>
               <widget class="GtkLabel" id="resume_path">
                 <property name="visible">True</property>
+                <property name="can_focus">False</property>
                 <property name="xalign">0</property>
                 <property name="xpad">6</property>
                 <property name="label" translatable="yes">Path to resume.dat:</property>
               </widget>
               <packing>
                 <property name="expand">False</property>
+                <property name="fill">True</property>
                 <property name="position">0</property>
               </packing>
             </child>
@@ -38,29 +58,36 @@
                 <property name="can_focus">True</property>
                 <property name="tooltip" translatable="yes">Path where the uTorrent resume.dat file can be found.
 Should auto-populate for most setups.</property>
-                <property name="invisible_char">&#x25CF;</property>
+                <property name="invisible_char">●</property>
+                <property name="primary_icon_activatable">False</property>
+                <property name="secondary_icon_activatable">False</property>
                 <property name="primary_icon_sensitive">True</property>
                 <property name="secondary_icon_sensitive">True</property>
               </widget>
               <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
                 <property name="padding">6</property>
                 <property name="position">1</property>
               </packing>
             </child>
           </widget>
           <packing>
-            <property name="position">1</property>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">2</property>
           </packing>
         </child>
         <child>
           <widget class="GtkAlignment" id="alignment1">
             <property name="visible">True</property>
+            <property name="can_focus">False</property>
             <property name="left_padding">6</property>
             <property name="right_padding">6</property>
             <child>
               <widget class="GtkVBox" id="vbox1">
                 <property name="visible">True</property>
-                <property name="orientation">vertical</property>
+                <property name="can_focus">False</property>
                 <child>
                   <widget class="GtkCheckButton" id="use_wine_mappings">
                     <property name="label" translatable="yes">Use WINE Mappings</property>
@@ -85,7 +112,7 @@ If you're unsure, you most likley don't need it.</property>
                     <property name="receives_default">False</property>
                     <property name="tooltip" translatable="yes">Resume Torrents after they are added to deluge.</property>
                     <property name="draw_indicator">True</property>
-                    <signal name="toggled" handler="on_resume_toggled"/>
+                    <signal name="toggled" handler="on_resume_toggled" swapped="no"/>
                   </widget>
                   <packing>
                     <property name="expand">False</property>
@@ -126,6 +153,8 @@ If you're unsure, you most likley don't need it.</property>
                     </child>
                   </widget>
                   <packing>
+                    <property name="expand">True</property>
+                    <property name="fill">True</property>
                     <property name="position">3</property>
                   </packing>
                 </child>
@@ -133,12 +162,15 @@ If you're unsure, you most likley don't need it.</property>
             </child>
           </widget>
           <packing>
-            <property name="position">2</property>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">3</property>
           </packing>
         </child>
         <child>
           <widget class="GtkHBox" id="hbox4">
             <property name="visible">True</property>
+            <property name="can_focus">False</property>
             <child>
               <placeholder/>
             </child>
@@ -148,9 +180,10 @@ If you're unsure, you most likley don't need it.</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <signal name="clicked" handler="on_import_button_clicked"/>
+                <signal name="clicked" handler="on_import_button_clicked" swapped="no"/>
               </widget>
               <packing>
+                <property name="expand">True</property>
                 <property name="fill">False</property>
                 <property name="position">1</property>
               </packing>
@@ -162,7 +195,7 @@ If you're unsure, you most likley don't need it.</property>
           <packing>
             <property name="expand">False</property>
             <property name="fill">False</property>
-            <property name="position">3</property>
+            <property name="position">4</property>
           </packing>
         </child>
       </widget>
