@@ -72,14 +72,11 @@ class GtkUI(GtkPluginBase):
 
         client.register_event_handler('uTorrentImportLoggingEvent', self.log_to_user)
 
-
     def disable(self):
         component.get("Preferences").remove_page("uTorrentImport")
-        component.get("PluginManager").deregister_hook("on_apply_prefs",
-                                                       self.on_apply_prefs)
+        component.get("PluginManager").deregister_hook("on_apply_prefs", self.on_apply_prefs)
 
-        component.get("PluginManager").deregister_hook("on_show_prefs",
-                                                       self.on_show_prefs)
+        component.get("PluginManager").deregister_hook("on_show_prefs", self.on_show_prefs)
 
     def on_apply_prefs(self):
         log.debug("applying prefs for uTorrentImport")
@@ -91,6 +88,8 @@ class GtkUI(GtkPluginBase):
             buffer = self.log_view.get_buffer()
             iter = buffer.get_end_iter()
             buffer.insert(iter, message + '\n')
+            adj = self.log_view.get_parent().get_vadjustment()
+            adj.set_value(adj.get_upper() - adj.get_page_size())
 
     @defer.inlineCallbacks
     def on_show_prefs(self):
@@ -128,7 +127,6 @@ class GtkUI(GtkPluginBase):
         else:
             self.force_recheck.set_active(self._previous_force_recheck)
             self.force_recheck.set_sensitive(True)
-
 
     def toggle_button(self, button):
         if button.get_sensitive():
