@@ -21,6 +21,13 @@
 ![Screenshot](http://zippy.gfycat.com/LimpThreadbareAyeaye.gif)
 
 ### Changelog:
+#### v2.1.2
+- Added a Dialog to notify the user when the import is finished
+- Fixed a bug that was causing unnecessary renames
+- Fixed a bug that could cause torrents with only one file nested in a folder to be 
+incorrectly renamed.
+- Fixed a bug related to unicode torrent files taht could cause the import to halt.
+
 #### v2.1.0:
 * Fixed some renamed torrents not rechecking properly
 * added support for correctly redirecting individual files relocated by uTorrent
