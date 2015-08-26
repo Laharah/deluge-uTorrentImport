@@ -21,7 +21,7 @@
 ![Screenshot](http://zippy.gfycat.com/LimpThreadbareAyeaye.gif)
 
 ### Changelog:
-#### v2.1.2
+#### v2.1.2:
 - Added a Dialog to notify the user when the import is finished
 - Fixed a bug that was causing unnecessary renames
 - Fixed a bug that could cause torrents with only one file nested in a folder to be 
