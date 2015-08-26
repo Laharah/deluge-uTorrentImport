@@ -159,7 +159,7 @@ class Core(CorePluginBase):
         deferred_list = []
         if len(files) > 1:
             main_folder = files[0]['path'].split('/')[0] + '/'
-            if main_folder != torrent_root:
+            if main_folder != torrent_root + '/':
                 try:
                     log.info(u'Renaming {0} => {1}'.format(main_folder,
                                                            torrent_root).encode('utf-8'))
