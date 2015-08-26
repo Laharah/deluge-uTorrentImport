@@ -118,24 +118,25 @@ class GtkUI(GtkPluginBase):
             resume=settings['resume'])
         log.debug('recieved result! {0}'.format(result))
         self.toggle_button(button)
-        self.show_result()
+        self.show_result(result)
 
     def show_result(self, results):
         successes, failures = results
         title = u'uTorrentImport Finished'
-        dialog = gtk.Dialog(title, None, True, (gtk.STOCK_OK, gtk.STOCK_OK))
-        message = u'uTorrentImport has finished importing torrents from uTorrent.\n'
-        '{0} torrents have been added to deluge.\n'
-        '{1} torrents were skipped.\n'
-        'You may wish to restart the deluge UI to update the status '
-        'of the added torrents.'.format(len(successes), len(failures))
+        dialog = gtk.Dialog(title, None, True, (gtk.STOCK_OK, gtk.RESPONSE_OK))
+        message = u'''uTorrentImport has finished importing torrents from uTorrent.\n
+        {0} torrents have been added to deluge.\n
+        {1} torrents were skipped.\n
+        You may wish to restart the deluge UI to update the status
+        of the added torrents.'''.format(len(successes), len(failures))
 
         label = gtk.Label(message)
         dialog.get_content_area().add(label)
         dialog.set_position(gtk.WIN_POS_CENTER)
-        dialog.set_Gravity(gtk.gdk.GRAVITY_CENTER)
+        dialog.set_gravity(gtk.gdk.GRAVITY_CENTER)
         dialog.show_all()
         dialog.run()
+        dialog.destroy()
 
 
     def on_resume_toggled(self, _):
