@@ -30,6 +30,7 @@ def transfer(torrent_id, info, tags):
     torrent = component.get('TorrentManager')[torrent_id]
     tags = set(tags)
     if 'time_added' in tags:
+        log.debug('Setting time_added on torrent {0}'.format(torrent_id))
         torrent.time_added = info['added_on']
         tags.remove('time_added')
     translators = {
