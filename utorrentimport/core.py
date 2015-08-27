@@ -43,15 +43,15 @@ import base64
 from getpass import getuser
 
 from deluge.bencode import bdecode
-from deluge.log import LOG as log
 from deluge.plugins.pluginbase import CorePluginBase
 import deluge.component as component
 import deluge.configmanager
 from deluge.core.rpcserver import export
 from twisted.internet import defer, reactor
 
-from common import Log
+from utorrentimport.common import Log
 import torrent_event_ledger
+from utorrentimport import translate_meta
 
 log = Log()
 
@@ -221,7 +221,8 @@ class Core(CorePluginBase):
                      resume_data=None,
                      use_wine_mappings=False,
                      force_recheck=True,
-                     resume=False):
+                     resume=False,
+                     transfer_meta=None):
         """
         attempts to add utorrent torrents to deluge
         resume_data: path to utorrent resume data
@@ -253,7 +254,8 @@ class Core(CorePluginBase):
                     torrent = os.path.abspath(os.path.join(os.path.dirname(resume_data),
                                                            torrent))
                     success, name = self._import_torrent(torrent, info, use_wine_mappings,
-                                                         force_recheck, resume)
+                                                         force_recheck, resume,
+                                                         transfer_meta)
                     if success:
                         added.append(name)
                     else:
@@ -264,9 +266,11 @@ class Core(CorePluginBase):
 
         defer.returnValue((added, failed))
 
-    def _import_torrent(self, torrent, info, use_wine_mappings=False,
-                       force_recheck=True,
-                       resume=False):
+    def _import_torrent(self, torrent, info,
+                        use_wine_mappings=False,
+                        force_recheck=True,
+                        resume=False,
+                        transfer_meta=None):
 
         try:
             with open(unicode(torrent, 'utf-8'), 'rb') as f:
@@ -323,6 +327,8 @@ class Core(CorePluginBase):
             self.resolve_path_renames(torrent_id, torrent_root,
                                       force_recheck=force_recheck,
                                       targets=targets)
+            if transfer_meta:
+                translate_meta.transfer(torrent_id, info, transfer_meta)
             return True, torrent_root
 
     @export
