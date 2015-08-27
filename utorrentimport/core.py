@@ -61,7 +61,8 @@ DEFAULT_PREFS = {
     "use_wine_mappings": False,
     "force_recheck": True,
     "resume": False,
-    "previous_resume_dat_path": ''
+    "previous_resume_dat_path": '',
+    "transfer_meta": []
 }
 
 

@@ -86,7 +86,7 @@ class GtkUI(GtkPluginBase):
         client.utorrentimport.set_config(self.config)
 
     def log_to_user(self, level, message):
-        if level in ('error', 'info'):
+        if level in ('error', 'info',):
             buffer = self.log_view.get_buffer()
             iter = buffer.get_end_iter()
             buffer.insert(iter, message + '\n')
@@ -113,11 +113,14 @@ class GtkUI(GtkPluginBase):
         self.log_view.get_buffer().set_text('')
         settings = self.gather_settings()
         log.debug('sending import command...')
+
         result = yield client.utorrentimport.begin_import(
             settings['previous_resume_dat_path'],
             use_wine_mappings=settings['use_wine_mappings'],
             force_recheck=settings['force_recheck'],
-            resume=settings['resume'])
+            resume=settings['resume'],
+            transfer_meta=settings['transfer_meta'])
+
         log.debug('recieved result! {0}'.format(result))
         self.toggle_button(button)
         self.show_result(result)
@@ -168,12 +171,24 @@ class GtkUI(GtkPluginBase):
         self.force_recheck.set_active(config['force_recheck'])
         self._previous_force_recheck = config['force_recheck']
         self.resume.set_active(config['resume'])
+        try:
+            self.glade.get_widget('time_added_checkbox').set_active(
+                'time_added' in config['transfer_meta'])
+        except KeyError:
+            pass
         self.resume_dat_entry.set_text(config['previous_resume_dat_path'])
 
     def gather_settings(self):
+        options = [
+            'time_added', 'max_download_speed', 'max_upload_speed',
+            'max_connections', 'max_upload_slots'
+        ]
+        transfer_meta = [tag for tag in options
+                         if self.glade.get_widget(tag + '_checkbox').get_active()]
         return {
             'use_wine_mappings': self.use_wine_mappings.get_active(),
             'force_recheck': self.force_recheck.get_active(),
             'resume': self.resume.get_active(),
-            'previous_resume_dat_path': self.resume_dat_entry.get_text()
+            'previous_resume_dat_path': self.resume_dat_entry.get_text(),
+            'transfer_meta': transfer_meta
         }
