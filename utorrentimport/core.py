@@ -119,7 +119,7 @@ class Core(CorePluginBase):
                 raw = f.read()
         except (IOError, OSError) as e:
             log.error('Could not open {0}. Reason{1}'.format(path, e))
-            return None
+            raise
         return bdecode(raw)
 
     def find_wine_drives(self):
@@ -231,9 +231,13 @@ class Core(CorePluginBase):
         self.find_wine_drives()
         if not resume_data:
             resume_data = self.get_default_resume_path()
-        data = self.read_resume_data(resume_data)
-        if not data:
+        try:
+            data =self.read_resume_data(resume_data)
+        except Exception as e:
+            with log:
+                log.error('Failed to get resume.dat. Reason: {0}'.format(e))
             defer.returnValue((None, None))
+
         added = []
         failed = []
         with self.event_ledger:

@@ -127,7 +127,11 @@ class GtkUI(GtkPluginBase):
         title = u'uTorrentImport Finished'
         dialog = dialogs.AsyncDialog(title, None, True, (gtk.STOCK_OK, gtk.RESPONSE_OK),
                                      destroy_signals=gtk.RESPONSE_OK)
-        message = u'''
+
+        if successes is failures is None:
+            message = 'Error Running uTorrentImport! See log in preferences!'
+        else:
+            message = u'''
         uTorrentImport has finished importing torrents from uTorrent.
 
             {0} torrents have been added to deluge.
