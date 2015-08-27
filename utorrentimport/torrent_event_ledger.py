@@ -135,7 +135,7 @@ class TorrentEventLedger(object):
         if not entry:
             del self.ledgers[event][torrent_id]
 
-    def watch_for_file_rename(self, torrent_id, index=None, new_name=None):
+    def await_file_rename(self, torrent_id, index=None, new_name=None):
         """get a deferred for a specific torrent file rename"""
         if not self.registered_events:
             raise TorrentEventLedgerNotListening()
@@ -149,7 +149,7 @@ class TorrentEventLedger(object):
             self.ledgers['TorrentFileRenamedEvent'][torrent_id] = {(index, new_name): d}
         return d
 
-    def watch_for_folder_rename(self, torrent_id, old=None, new=None):
+    def await_folder_rename(self, torrent_id, old=None, new=None):
         """get a deferred for a specific torrent folder rename"""
         if not self.registered_events:
             raise TorrentEventLedgerNotListening()

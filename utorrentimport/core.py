@@ -165,8 +165,8 @@ class Core(CorePluginBase):
                                                            torrent_root).encode('utf-8'))
                 except UnicodeDecodeError:
                     pass
-                d = self.event_ledger.watch_for_folder_rename(torrent_id, main_folder,
-                                                              torrent_root + '/')
+                d = self.event_ledger.await_folder_rename(torrent_id, main_folder,
+                                                          torrent_root + '/')
                 torrent.rename_folder(main_folder, torrent_root)
                 deferred_list.append(d)
                 recheck_required = True
@@ -175,10 +175,10 @@ class Core(CorePluginBase):
                 renames = []
                 for index, new_path in targets:
                     new_path = os.path.join(torrent_root, new_path)
-                    deferred_list.append(self.event_ledger.watch_for_file_rename(
-                        torrent_id,
-                        index=index,
-                        new_name=new_path))
+                    deferred_list.append(
+                        self.event_ledger.await_file_rename(torrent_id,
+                                                            index=index,
+                                                            new_name=new_path))
                     renames.append((index, new_path))
                 torrent.rename_files(renames)
                 recheck_required = True
@@ -191,13 +191,12 @@ class Core(CorePluginBase):
                                                            torrent_root).encode('utf-8'))
                 except UnicodeDecodeError:
                     pass
-                d = self.event_ledger.watch_for_file_rename(torrent_id,
-                                                            index=0,
-                                                            new_name=torrent_root)
+                d = self.event_ledger.await_file_rename(torrent_id,
+                                                        index=0,
+                                                        new_name=torrent_root)
                 torrent.rename_files([(0, torrent_root)])
                 deferred_list.append(d)
                 recheck_required = True
-
 
         if deferred_list:
             deferred_list = defer.DeferredList(deferred_list)
@@ -232,7 +231,7 @@ class Core(CorePluginBase):
         if not resume_data:
             resume_data = self.get_default_resume_path()
         try:
-            data =self.read_resume_data(resume_data)
+            data = self.read_resume_data(resume_data)
         except Exception as e:
             with log:
                 log.error('Failed to get resume.dat. Reason: {0}'.format(e))
@@ -253,9 +252,8 @@ class Core(CorePluginBase):
                         counter = 0
                     torrent = os.path.abspath(os.path.join(os.path.dirname(resume_data),
                                                            torrent))
-                    success, name = self._import_torrent(torrent, info,
-                                                        use_wine_mappings,
-                                                        force_recheck, resume)
+                    success, name = self._import_torrent(torrent, info, use_wine_mappings,
+                                                         force_recheck, resume)
                     if success:
                         added.append(name)
                     else:
@@ -283,7 +281,6 @@ class Core(CorePluginBase):
             ut_save_path = unicode(info['path'], 'latin-1')
         except TypeError:
             pass
-
 
         torrent_root = os.path.basename(ut_save_path)
         deluge_storage_path = os.path.dirname(ut_save_path)
@@ -316,8 +313,7 @@ class Core(CorePluginBase):
 
         else:
             try:
-                log.info(
-                    u'SUCCESS!: "{0}" added successfully'.format(torrent_root))
+                log.info(u'SUCCESS!: "{0}" added successfully'.format(torrent_root))
             except UnicodeDecodeError:
                 log.info(u'SUCCESS: added but with UnicodeError')
             try:
