@@ -30,7 +30,8 @@ class AsyncDialog(gtk.Dialog):
         def dialog_response_cb(dialog, response_id):
             if response_id in self.destroy_signals:
                 self.destroy()
-            self.response_callback(response_id)
+            if self.response_callback:
+                self.response_callback(response_id)
 
         self.connect('response', dialog_response_cb)
         if not self.modal:
