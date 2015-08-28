@@ -98,6 +98,7 @@ Should auto-populate for most setups.</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">False</property>
+                        <property name="tooltip" translatable="yes">Reset the date added in deluge to match the date each torrent was added in uTorrent</property>
                         <property name="draw_indicator">True</property>
                       </widget>
                       <packing>
@@ -164,6 +165,7 @@ If you're unsure, you most likley don't need it.</property>
                   <widget class="GtkFrame" id="meta_frame">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
+                    <property name="tooltip" translatable="yes">These options will import the uTorrent Setting for each torrent.</property>
                     <property name="border_width">1</property>
                     <property name="label_xalign">0</property>
                     <child>
@@ -181,6 +183,7 @@ If you're unsure, you most likley don't need it.</property>
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="receives_default">False</property>
+                                <property name="tooltip" translatable="yes">Set each torrent's Max Download Speed to what it was in uTorrent</property>
                                 <property name="draw_indicator">True</property>
                               </widget>
                               <packing>
@@ -195,6 +198,7 @@ If you're unsure, you most likley don't need it.</property>
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="receives_default">False</property>
+                                <property name="tooltip" translatable="yes">Set each torrent's Max Upload Speed to what it was in uTorrent</property>
                                 <property name="draw_indicator">True</property>
                               </widget>
                               <packing>
@@ -209,6 +213,7 @@ If you're unsure, you most likley don't need it.</property>
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="receives_default">False</property>
+                                <property name="tooltip" translatable="yes">Set each torrent's Max Upload Slots to what it was in uTorrent</property>
                                 <property name="draw_indicator">True</property>
                               </widget>
                               <packing>
@@ -223,6 +228,7 @@ If you're unsure, you most likley don't need it.</property>
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="receives_default">False</property>
+                                <property name="tooltip" translatable="yes">Set each torrent's Max Connections to what it was in uTorrent</property>
                                 <property name="draw_indicator">True</property>
                               </widget>
                               <packing>

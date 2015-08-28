@@ -1,11 +1,13 @@
 # uTorrentImport
 ### a cross platform Deluge plugin to import torrents from uTorrent
-**v2.1.3**
+**v2.2.0**
 *Download [HERE](https://github.com/Laharah/deluge-uTorrentImport/tree/master/dist)*
 
 * supports WINE mappings
 * automatically searches for relevent uTorrent sessions
 * Advanced support for renamed folder or relocated files.
+* Support for importing the bandwidth settings for each torrent
+* Supports setting the Added Date to match uTorrent's date added
 * **ONE BUTTON. NO COMMAND LINE NEEDED!**
 
 
@@ -21,6 +23,10 @@
 ![Screenshot](http://zippy.gfycat.com/LimpThreadbareAyeaye.gif)
 
 ### Changelog:
+#### v2.2.0:
+- Added an option for preserving the uTorrent added date
+- Added options for importing bandwidth settings for uTorrent torrents
+
 #### v2.1.3:
 - Added a Dialog to notify the user when the import is finished
 - Better error reporting for missing or corrupt resume.dat files.
