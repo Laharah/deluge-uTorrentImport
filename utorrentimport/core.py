@@ -79,18 +79,16 @@ class Core(CorePluginBase):
     def update(self):
         pass
 
-    def on_torrent_folder_renamed(self, torrent_id, old, new):
-        pass
-
-    def on_torrent_file_renamed(self, torrent_id, index, name):
-        pass
-
     #########
     #  Section: Utilities
     #########
 
     @export
     def get_default_resume_path(self):
+        """
+        Checks the various common paths resume.dat may reside and returns a path to
+        it if it's found.
+        """
         log.debug('Getting resume.dat path...')
         app_datas = []
         user_home = os.path.expanduser('~')
@@ -115,6 +113,7 @@ class Core(CorePluginBase):
         return None
 
     def read_resume_data(self, path):
+        """given the path to resume.dat, decode and return it"""
         try:
             with open(path, 'rb') as f:
                 raw = f.read()
@@ -124,6 +123,10 @@ class Core(CorePluginBase):
         return bdecode(raw)
 
     def find_wine_drives(self):
+        """
+        Searches for WINE drives and adds them to a dictionary for
+         mapping to while importing torrents
+         """
         drives = os.path.join(os.path.expanduser('~'), '.wine/dosdevices')
         if os.path.isdir(drives):
             log.info('Found WINE drive mappings:')
@@ -135,6 +138,9 @@ class Core(CorePluginBase):
             self.config.save()
 
     def wine_path_check(self, path):
+        """
+        Used to check if a path is mapped to a wine drive and returns the corrected path
+        """
         mapped = path
         drive = re.match(r'^([A-Z]:)', path, re.IGNORECASE)
         try:
@@ -156,7 +162,6 @@ class Core(CorePluginBase):
         """
         torrent = self.torrent_manager[torrent_id]
         files = torrent.get_files()
-        recheck_required = False
         deferred_list = []
         if '/' in files[0]['path']:
             main_folder = files[0]['path'].split('/')[0] + '/'
@@ -170,7 +175,6 @@ class Core(CorePluginBase):
                                                           torrent_root + '/')
                 torrent.rename_folder(main_folder, torrent_root)
                 deferred_list.append(d)
-                recheck_required = True
 
             if targets:
                 renames = []
@@ -182,7 +186,6 @@ class Core(CorePluginBase):
                                                             new_name=new_path))
                     renames.append((index, new_path))
                 torrent.rename_files(renames)
-                recheck_required = True
 
         else:
             main_file = files[0]['path']
@@ -197,13 +200,12 @@ class Core(CorePluginBase):
                                                         new_name=torrent_root)
                 torrent.rename_files([(0, torrent_root)])
                 deferred_list.append(d)
-                recheck_required = True
 
         if deferred_list:
             deferred_list = defer.DeferredList(deferred_list)
             deferred_list.addCallback(lambda x: torrent.force_recheck())
 
-        if force_recheck and not recheck_required:
+        if force_recheck and not deferred_list:
             torrent.force_recheck()
             return
 
@@ -225,8 +227,14 @@ class Core(CorePluginBase):
                      resume=False,
                      transfer_meta=None):
         """
-        attempts to add utorrent torrents to deluge
+        attempts to add utorrent torrents to deluge and reports the results back
         resume_data: path to utorrent resume data
+        use_wine_mappings: bool to check torrent paths against wine mappings before
+            import
+        force_recheck: recheck all torrents after import
+        resume: Do not add torrents in the paused state
+        transfer_meta: a list of torrent option tags to transfer to the new torrent
+            (also support 'time_added')
         """
 
         self.find_wine_drives()
@@ -272,6 +280,7 @@ class Core(CorePluginBase):
                         force_recheck=True,
                         resume=False,
                         transfer_meta=None):
+        """handles importing of a single torrent. Same arguments as `begin_import`"""
 
         try:
             with open(unicode(torrent, 'utf-8'), 'rb') as f:

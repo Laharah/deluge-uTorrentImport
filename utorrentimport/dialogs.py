@@ -1,4 +1,3 @@
-
 import gtk
 
 
@@ -10,8 +9,13 @@ class AsyncDialog(gtk.Dialog):
     destroy_signals: A convince for setting signals that will destroy the dialog.
     """
 
-    def __init__(self, title=None, parent=None, flags=None, buttons=None,
-                 response_callback=None, destroy_signals=None):
+    def __init__(self,
+                 title=None,
+                 parent=None,
+                 flags=None,
+                 buttons=None,
+                 response_callback=None,
+                 destroy_signals=None):
         gtk.Dialog.__init__(self, title, parent, flags, buttons)
 
         self.response_callback = response_callback
@@ -20,9 +24,9 @@ class AsyncDialog(gtk.Dialog):
             destroy_signals = [destroy_signals]
         self.destroy_signals = destroy_signals
 
-
     def run(self):
         """a version of gtk.Dialog.run that does not block"""
+
         def dialog_response_cb(dialog, response_id):
             if response_id in self.destroy_signals:
                 self.destroy()

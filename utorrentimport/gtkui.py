@@ -86,6 +86,7 @@ class GtkUI(GtkPluginBase):
         client.utorrentimport.set_config(self.config)
 
     def log_to_user(self, level, message):
+        """A callback to listen for uTorrentImport log events and display them"""
         if level in ('error', 'info',):
             buffer = self.log_view.get_buffer()
             iter = buffer.get_end_iter()
@@ -126,6 +127,7 @@ class GtkUI(GtkPluginBase):
         self.show_result(result)
 
     def show_result(self, results):
+        """displays a dialog to the user with the results of the import"""
         successes, failures = results
         title = u'uTorrentImport Finished'
         dialog = dialogs.AsyncDialog(title, None, True, (gtk.STOCK_OK, gtk.RESPONSE_OK),
@@ -151,6 +153,8 @@ class GtkUI(GtkPluginBase):
         dialog.run()
 
     def on_resume_toggled(self, _):
+        """foreces the 'Force Recheck' checkbox to be checked if the user dosen't
+        add the torrents in a resumed state"""
         if not self.resume.get_active():
             self._previous_force_recheck = self.force_recheck.get_active()
             self.force_recheck.set_sensitive(False)
@@ -160,6 +164,7 @@ class GtkUI(GtkPluginBase):
             self.force_recheck.set_sensitive(True)
 
     def toggle_button(self, button):
+        """used to keep the user from running multiple imports at once"""
         if button.get_sensitive():
             button.set_sensitive(False)
         else:

@@ -49,7 +49,11 @@ def get_resource(filename):
 
 
 class Log(object):
-    """small wrapper class for formatting log outputs"""
+    """
+    small wrapper class for formatting log outputs
+
+    Supports transmitting the log events to the user via a custom event.
+    """
 
     def __init__(self):
         self.transmitting = False

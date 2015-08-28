@@ -7,26 +7,35 @@ import deluge.component as component
 from common import Log
 
 log = Log()
-log.transmitting=True
+log.transmitting = True
 
+#  infinite in utorrent is 0, and -1 in deluge
 _translate_inf = lambda x: -1 if x == 0 else x
 
+
 def max_download_speed(info):
-    downspeed = float(info['downspeed'])/1024
+    downspeed = float(info['downspeed']) / 1024
     return _translate_inf(downspeed)
 
+
 def max_upload_speed(info):
-    upspeed = float(info['upspeed'])/1024
+    upspeed = float(info['upspeed']) / 1024
     return _translate_inf(upspeed)
+
 
 def max_connections(info):
     return info['max_connections']
+
 
 def max_upload_slots(info):
     return _translate_inf(info['ulslots'])
 
 
 def transfer(torrent_id, info, tags):
+    """
+    given a torrents deluge id and utorrent resume data and a list of deluge options,
+    extract and set each option.
+    """
     torrent = component.get('TorrentManager')[torrent_id]
     tags = set(tags)
     if 'time_added' in tags:
@@ -48,8 +57,7 @@ def transfer(torrent_id, info, tags):
             log.error('{0} is not a valid torrent option for transfer'.format(tag))
             continue
         value = translate(info)
-        log.debug('Setting {0} -> {1} on torrent {2}'.format(
-            tag, value, torrent_id))
+        log.debug('Setting {0} -> {1} on torrent {2}'.format(tag, value, torrent_id))
         options[tag] = value
 
     torrent.set_options(options)
