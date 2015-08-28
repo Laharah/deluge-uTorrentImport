@@ -182,8 +182,7 @@ class Core(CorePluginBase):
                     new_path = os.path.join(torrent_root, new_path)
                     deferred_list.append(
                         self.event_ledger.await_file_rename(torrent_id,
-                                                            index=index,
-                                                            new_name=new_path))
+                                                            index=index))
                     renames.append((index, new_path))
                 torrent.rename_files(renames)
 
