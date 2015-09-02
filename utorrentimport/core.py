@@ -301,12 +301,11 @@ class Core(CorePluginBase):
         except TypeError:
             pass
 
+        if use_wine_mappings:
+            ut_save_path = self.wine_path_check(ut_save_path)
+
         torrent_root = os.path.basename(ut_save_path)
         deluge_storage_path = os.path.dirname(ut_save_path)
-
-        if use_wine_mappings:
-            torrent_root = self.wine_path_check(torrent_root)
-            deluge_storage_path = self.wine_path_check(deluge_storage_path)
 
         try:
             log.debug(u'Adding {0} to deluge.'.format(torrent_root))
