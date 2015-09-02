@@ -132,9 +132,10 @@ class Core(CorePluginBase):
             log.info('Found WINE drive mappings:')
             for drive in [d for d in os.listdir(drives)
                           if re.match('^[A-Z]:$', d, re.IGNORECASE)]:
-                self.config['wine_drives'][drive.lower()] = os.path.relpath(
-                    os.path.join(drives, drive))
-                log.info("{0} => {1}".format(self.config['wine_drives'][drive.lower()]))
+                location = os.path.abspath(os.path.join(drives, drive))
+                self.config['wine_drives'][drive.lower()] = location
+                log.info("{0} => {1}".format(self.config['wine_drives'][drive.lower()],
+                                             location))
             self.config.save()
 
     def wine_path_check(self, path):
