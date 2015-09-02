@@ -146,7 +146,8 @@ class Core(CorePluginBase):
         drive = re.match(r'^([A-Z]:)', path, re.IGNORECASE)
         try:
             if self.config['wine_drives'] and drive is not None:
-                mapped = self.config['wine_drives'][drive.group(1).lower()] + path[2:]
+                mapped = (self.config['wine_drives'][drive.group(1).lower()] +
+                          path[2:].replace('\\', '/'))
         except KeyError:
             log.debug('No WINE mapping for drive {0}'.format(drive.group(1)))
         return mapped
