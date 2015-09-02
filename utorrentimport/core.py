@@ -260,8 +260,12 @@ class Core(CorePluginBase):
                     if counter > 10:
                         yield self.take_breath()
                         counter = 0
-                    torrent = os.path.abspath(os.path.join(os.path.dirname(resume_data),
-                                                           torrent))
+                    if use_wine_mappings:
+                        torrent = os.path.abspath(os.path.join(
+                            os.path.dirname(resume_data), self.wine_path_check(torrent)))
+                    else:
+                        torrent = os.path.abspath(
+                            os.path.join(os.path.dirname(resume_data), torrent))
                     success, name = self._import_torrent(torrent, info, use_wine_mappings,
                                                          force_recheck, resume,
                                                          transfer_meta)
