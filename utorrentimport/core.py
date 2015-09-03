@@ -316,7 +316,7 @@ class Core(CorePluginBase):
             'download_location': deluge_storage_path,
             'add_paused': True if not resume else False
         }
-        torrent_id = component.get("Core").add_torrent_file(torrent_root,
+        torrent_id = component.get("Core").add_torrent_file(os.path.basename(torrent),
                                                             filedump=filedump,
                                                             options=options)
 
