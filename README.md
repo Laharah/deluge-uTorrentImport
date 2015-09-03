@@ -1,7 +1,7 @@
 # uTorrentImport
 ### a cross platform Deluge plugin to import torrents from uTorrent
 **v2.2.6**
-*Download [HERE](https://github.com/Laharah/deluge-uTorrentImport/releases)*
+*Download [HERE](https://github.com/Laharah/deluge-uTorrentImport/releases/latest)*
 
 * supports WINE mappings
 * automatically searches for relevent uTorrent sessions
@@ -14,7 +14,7 @@
 #### Installation and use:
 
 1. Download the appropriate .egg file here (use both if you're not sure): [DOWNLOADS]
-(https://github.com/Laharah/deluge-uTorrentImport/releases)
+(https://github.com/Laharah/deluge-uTorrentImport/releases/latest)
 2. Open Deluge, go to Preferences > Plugins > Install Plugin
 3. Add the .egg file(s)
 4. Turn on the plugin (tick the box)
