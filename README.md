@@ -8,6 +8,7 @@
 * Advanced support for renamed folder or relocated files.
 * Support for importing the bandwidth settings for each torrent
 * Supports setting the Added Date to match uTorrent's date added
+* Skipped files are carried over from uTorrent
 * **ONE BUTTON. NO COMMAND LINE NEEDED!**
 
 
