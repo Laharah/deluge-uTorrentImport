@@ -70,6 +70,7 @@ class Core(CorePluginBase):
 
     def __init__(self, plugin_name):
         super(Core, self).__init__(plugin_name)
+        log.debug("initialized successfully...")
 
     def enable(self):
         self.config = deluge.configmanager.ConfigManager("utorrentimport.conf",
