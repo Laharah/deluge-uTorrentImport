@@ -67,7 +67,6 @@ DEFAULT_PREFS = {
 
 
 class Core(CorePluginBase):
-
     def __init__(self, plugin_name):
         super(Core, self).__init__(plugin_name)
         log.debug("initialized successfully...")
@@ -99,8 +98,8 @@ class Core(CorePluginBase):
         user_home = os.path.expanduser('~')
         if os.getenv('APPDATA'):
             app_datas.append(os.getenv('APPDATA'))
-        app_datas.append(os.path.join(user_home, '.wine/drive_c/users', getuser(),
-                                      'Application Data'))
+        app_datas.append(
+            os.path.join(user_home, '.wine/drive_c/users', getuser(), 'Application Data'))
         app_datas.append(os.path.join(user_home, 'Library', 'Application Support'))
         app_datas.append('/opt')
         app_datas.append(user_home)
@@ -135,8 +134,10 @@ class Core(CorePluginBase):
         drives = os.path.join(os.path.expanduser('~'), '.wine/dosdevices')
         if os.path.isdir(drives):
             log.info('Found WINE drive mappings:')
-            for drive in [d for d in os.listdir(drives)
-                          if re.match('^[A-Z]:$', d, re.IGNORECASE)]:
+            for drive in [
+                    d for d in os.listdir(drives)
+                    if re.match('^[A-Z]:$', d, re.IGNORECASE)
+            ]:
                 location = os.path.abspath(os.path.join(drives, drive))
                 self.config['wine_drives'][drive.lower()] = location
                 log.info("{0} => {1}".format(self.config['wine_drives'][drive.lower()],
@@ -157,7 +158,9 @@ class Core(CorePluginBase):
             log.debug('No WINE mapping for drive {0}'.format(drive.group(1)))
         return mapped
 
-    def resolve_path_renames(self, torrent_id, torrent_root,
+    def resolve_path_renames(self,
+                             torrent_id,
+                             torrent_root,
                              force_recheck=True,
                              targets=None):
         """
@@ -174,8 +177,8 @@ class Core(CorePluginBase):
             main_folder = files[0]['path'].split('/')[0] + '/'
             if main_folder != torrent_root + '/':
                 try:
-                    log.info(u'Renaming {0} => {1}'.format(main_folder,
-                                                           torrent_root).encode('utf-8'))
+                    log.info(u'Renaming {0} => {1}'.format(main_folder, torrent_root)
+                             .encode('utf-8'))
                 except UnicodeDecodeError:
                     pass
                 d = self.event_ledger.await_folder_rename(torrent_id, main_folder,
@@ -188,8 +191,7 @@ class Core(CorePluginBase):
                 for index, new_path in targets:
                     new_path = os.path.join(torrent_root, new_path)
                     deferred_list.append(
-                        self.event_ledger.await_file_rename(torrent_id,
-                                                            index=index))
+                        self.event_ledger.await_file_rename(torrent_id, index=index))
                     renames.append((index, new_path))
                 torrent.rename_files(renames)
 
@@ -197,13 +199,12 @@ class Core(CorePluginBase):
             main_file = files[0]['path']
             if main_file != torrent_root:
                 try:
-                    log.info(u'Renaming {0} => {1}'.format(main_file,
-                                                           torrent_root).encode('utf-8'))
+                    log.info(u'Renaming {0} => {1}'.format(main_file, torrent_root)
+                             .encode('utf-8'))
                 except UnicodeDecodeError:
                     pass
-                d = self.event_ledger.await_file_rename(torrent_id,
-                                                        index=0,
-                                                        new_name=torrent_root)
+                d = self.event_ledger.await_file_rename(
+                    torrent_id, index=0, new_name=torrent_root)
                 torrent.rename_files([(0, torrent_root)])
                 deferred_list.append(d)
 
@@ -267,8 +268,10 @@ class Core(CorePluginBase):
                         yield self.take_breath()
                         counter = 0
                     if use_wine_mappings:
-                        torrent = os.path.abspath(os.path.join(
-                            os.path.dirname(resume_data), self.wine_path_check(torrent)))
+                        torrent = os.path.abspath(
+                            os.path.join(
+                                os.path.dirname(resume_data),
+                                self.wine_path_check(torrent)))
                     else:
                         torrent = os.path.abspath(
                             os.path.join(os.path.dirname(resume_data), torrent))
@@ -285,7 +288,9 @@ class Core(CorePluginBase):
 
         defer.returnValue((added, failed))
 
-    def _import_torrent(self, torrent, info,
+    def _import_torrent(self,
+                        torrent,
+                        info,
                         use_wine_mappings=False,
                         force_recheck=True,
                         resume=False,
@@ -307,9 +312,9 @@ class Core(CorePluginBase):
                     torrent = bytes(torrent)
                 except:
                     torrent = [hex(ord(c)) for c in torrent]
-                log.error('Unknown encoding in filename: {0}! skipping...'.format(bytes(torrent)))
+                log.error('Unknown encoding in filename: {0}! skipping...'.format(
+                    bytes(torrent)))
                 return False, torrent
-
 
         try:
             ut_save_path = unicode(info['path'], 'utf-8')
@@ -332,11 +337,10 @@ class Core(CorePluginBase):
         options = {
             'download_location': deluge_storage_path,
             'add_paused': True if not resume else False,
-            'file_priorities': [0 if p=='\x80' else 1 for p in info['prio']],
+            'file_priorities': [0 if p == '\x80' else 1 for p in info['prio']],
         }
-        torrent_id = component.get("Core").add_torrent_file(os.path.basename(torrent),
-                                                            filedump=filedump,
-                                                            options=options)
+        torrent_id = component.get("Core").add_torrent_file(
+            os.path.basename(torrent), filedump=filedump, options=options)
 
         if torrent_id is None:
             try:
@@ -356,9 +360,8 @@ class Core(CorePluginBase):
                 targets = info['targets']
             except KeyError:
                 targets = None
-            self.resolve_path_renames(torrent_id, torrent_root,
-                                      force_recheck=force_recheck,
-                                      targets=targets)
+            self.resolve_path_renames(
+                torrent_id, torrent_root, force_recheck=force_recheck, targets=targets)
             if transfer_meta:
                 translate_meta.transfer(torrent_id, info, transfer_meta)
             return True, torrent_root
