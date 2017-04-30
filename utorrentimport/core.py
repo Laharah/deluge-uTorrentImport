@@ -305,7 +305,7 @@ class Core(CorePluginBase):
             return False, torrent
         except UnicodeDecodeError:
             try:
-                with open(torrent, 'rb') as f:
+                with open(unicode(torrent, 'latin-1'), 'rb') as f:
                     filedump = base64.encodestring(f.read())
             except:
                 torrent = [str(hex(ord(c))) for c in torrent]
