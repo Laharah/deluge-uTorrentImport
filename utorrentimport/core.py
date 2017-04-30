@@ -298,6 +298,14 @@ class Core(CorePluginBase):
         except IOError:
             log.error(u'Could not open torrent {0}! skipping...'.format(torrent))
             return False, torrent
+        except UnicodeDecodeError:
+            try:
+                with open(torrent, 'rb') as f:
+                    filedump = base64.encodestring(f.read())
+            except:
+                log.error('Unknown encoding in filename: {0}! skipping...'.format(bytes(torrent)))
+                return False, torrent
+
 
         try:
             ut_save_path = unicode(info['path'], 'utf-8')
