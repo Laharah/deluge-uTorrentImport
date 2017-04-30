@@ -303,6 +303,10 @@ class Core(CorePluginBase):
                 with open(torrent, 'rb') as f:
                     filedump = base64.encodestring(f.read())
             except:
+                try:
+                    torrent = bytes(torrent)
+                except:
+                    torrent = [hex(ord(c)) for c in torrent]
                 log.error('Unknown encoding in filename: {0}! skipping...'.format(bytes(torrent)))
                 return False, torrent
 
