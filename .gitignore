@@ -1,0 +1,10 @@
+# osx
+.DS_Store
+
+# python
+.idea/
+build/
+dist/
+*.egg-info/
+*.pyc
+
