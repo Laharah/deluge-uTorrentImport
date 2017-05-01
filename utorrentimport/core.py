@@ -45,6 +45,7 @@ from getpass import getuser
 from deluge.bencode import bdecode
 from deluge.plugins.pluginbase import CorePluginBase
 import deluge.component as component
+from deluge.common import decode_string
 import deluge.configmanager
 from deluge.core.rpcserver import export
 from twisted.internet import defer, reactor
@@ -263,6 +264,7 @@ class Core(CorePluginBase):
                     if torrent in self.config["torrent_blacklist"]:
                         log.debug('skipping {0}'.format(torrent))
                         continue
+                    torrent = decode_string(torrent)
                     counter += 1
                     if counter > 10:
                         yield self.take_breath()
@@ -298,24 +300,14 @@ class Core(CorePluginBase):
         """handles importing of a single torrent. Same arguments as `begin_import`"""
 
         try:
-            with open(unicode(torrent, 'utf-8'), 'rb') as f:
+            with open(torrent, 'rb') as f:
                 filedump = base64.encodestring(f.read())
         except IOError:
             log.error(u'Could not open torrent {0}! skipping...'.format(torrent))
             return False, torrent
-        except UnicodeDecodeError:
-            try:
-                with open(unicode(torrent, 'latin-1'), 'rb') as f:
-                    filedump = base64.encodestring(f.read())
-            except:
-                torrent = [str(hex(ord(c))) for c in torrent]
-                log.error('Unknown encoding in filename: {0}! skipping...'.format(torrent))
-                return False, torrent
 
         try:
-            ut_save_path = unicode(info['path'], 'utf-8')
-        except UnicodeDecodeError:
-            ut_save_path = unicode(info['path'], 'latin-1')
+            ut_save_path = decode_string(info['path'])
         except TypeError:
             pass
 
