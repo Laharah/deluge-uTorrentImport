@@ -14,8 +14,8 @@
 
 #### Installation and use:
 
-1. Download the appropriate .egg file here (use both if you're not sure): [DOWNLOADS]
-(https://github.com/Laharah/deluge-uTorrentImport/releases/latest)
+1. Download the appropriate .egg file here (use both if you're not sure):
+   [DOWNLOADS](https://github.com/Laharah/deluge-uTorrentImport/releases/latest)
 2. Open Deluge, go to Preferences > Plugins > Install Plugin
 3. Add the .egg file(s)
 4. Turn on the plugin (tick the box)
