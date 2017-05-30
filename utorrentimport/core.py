@@ -119,6 +119,10 @@ class Core(CorePluginBase):
 
     def read_resume_data(self, path):
         """given the path to resume.dat, decode and return it"""
+        if not os.path.isfile(path):
+            er = '{0} is a folder, "Path to resume.dat" must be a file.'.format(path)
+            log.error(er)
+            raise AssertionError(er)
         try:
             with open(path, 'rb') as f:
                 raw = f.read()
