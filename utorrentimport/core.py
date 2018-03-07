@@ -119,6 +119,11 @@ class Core(CorePluginBase):
 
     def read_resume_data(self, path):
         """given the path to resume.dat, decode and return it"""
+        if not os.path.exists(path):
+            er = ("{0} could not be found. Please check the file exists and "
+                  "that you have permission to read it.".format(path))
+            log.error(er)
+            raise AssertionError(er)
         if not os.path.isfile(path):
             er = '{0} is a folder, "Path to resume.dat" must be a file.'.format(path)
             log.error(er)

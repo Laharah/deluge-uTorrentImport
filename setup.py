@@ -42,7 +42,7 @@ from setuptools import setup
 __plugin_name__ = "uTorrentImport"
 __author__ = "Laharah"
 __author_email__ = "laharah22+deluge@gmail.com"
-__version__ = "2.3.7"
+__version__ = "2.3.8"
 __url__ = "https://github.com/Laharah/deluge-uTorrentImport"
 __license__ = "GPLv3"
 __description__ = "Import torrents from uTorrent"
