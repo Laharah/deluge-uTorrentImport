@@ -358,10 +358,6 @@ class Core(CorePluginBase):
                 log.info(u'SUCCESS!: "{0}" added successfully'.format(torrent_root))
             except UnicodeDecodeError:
                 log.info(u'SUCCESS: added but with UnicodeError')
-            try:
-                targets = info['targets']
-            except KeyError:
-                targets = None
             self.resolve_path_renames(
                 torrent_id, torrent_root, force_recheck=force_recheck)
             if transfer_meta:
