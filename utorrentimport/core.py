@@ -331,10 +331,15 @@ class Core(CorePluginBase):
         except UnicodeDecodeError:
             log.error('Bad Filename, skipping')
             return False, torrent_root
+        try:
+            file_map = dict(info['targets'])
+        except KeyError:
+            file_map = {}
         options = {
             'download_location': deluge_storage_path,
             'add_paused': True if not resume else False,
             'file_priorities': [0 if p == '\x80' else 1 for p in info['prio']],
+            'mapped_files': file_map,
         }
         torrent_id = component.get("Core").add_torrent_file(
             os.path.basename(torrent), filedump=filedump, options=options)
@@ -358,7 +363,7 @@ class Core(CorePluginBase):
             except KeyError:
                 targets = None
             self.resolve_path_renames(
-                torrent_id, torrent_root, force_recheck=force_recheck, targets=targets)
+                torrent_id, torrent_root, force_recheck=force_recheck)
             if transfer_meta:
                 translate_meta.transfer(torrent_id, info, transfer_meta)
             return True, torrent_root
