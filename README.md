@@ -1,5 +1,8 @@
 # uTorrentImport
 ### a cross platform Deluge plugin to import torrents from uTorrent
+
+***NOTE: ONLY WORKS FOR DELUGE 1.3.x! NOT YET COMPATABLE FOR DELUGE 2.0***
+
 **v2.3.8**
 *Download [HERE](https://github.com/Laharah/deluge-uTorrentImport/releases/latest)*
 
